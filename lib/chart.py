@@ -625,17 +625,14 @@ class ArcGroups(_Drawable):
 
                     _left_pos = self.pos_from_angle(current_angle + math.pi / 2, real_w // 2, base=(real_x, real_y))
                     _right_pos = self.pos_from_angle(current_angle - math.pi / 2, real_w // 2, base=(real_x, real_y))
-                    #print(current_time, _left_pos, _right_pos, real_w)
                     # ordinary arcs can simply compare time
                     if (prev_left is None or prev_left[1] < _left_pos[1]) and  _left_pos[1] < left_pos_end[1]:
                         left_pos.append(_left_pos)
                     if (prev_right is None or prev_right[1] < _right_pos[1]) and  _right_pos[1] < right_pos_end[1]:
                         right_pos.append(_right_pos)
-                #print(current_time, _left_pos, _right_pos, real_w)
                 left_pos.append(left_pos_end)
                 right_pos.append(right_pos_end)
                 prev_left, prev_right = left_pos_end, right_pos_end
-            #print('\n'.join(map(str, zip(left_pos, right_pos))))
         pos = []
         pos.extend(left_pos)
         pos.extend(reversed(right_pos))
@@ -802,8 +799,9 @@ class TimingGroup(_Drawable):
         for arc_group in self.arc_groups:
             arc_group : ArcGroups
             color = arc_group.color
-            if color < 0 and track_meta.draw_black_line:
-                arc_group.draw(line_image, line_draw, track_meta, speed)
+            if color < 0:
+                if track_meta.draw_black_line:
+                    arc_group.draw(line_image, line_draw, track_meta, speed)
             else:
                 color_image = color_images.get(color, None)
                 if color_image is None:
