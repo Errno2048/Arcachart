@@ -84,6 +84,8 @@ def _read_action(line, chart : _chart.Chart, timing_group : _chart.TimingGroup):
         raise
 
 def _read_timing_group_args(timing_group, args):
+    if args is None:
+        return {}
     args = args.split('_')
     res = {}
     for arg in args:
