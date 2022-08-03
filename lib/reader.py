@@ -54,7 +54,7 @@ def _read_scene_control(args, chart : _chart.Chart, timing_group : _chart.Timing
         # others
         pass
 
-def _read_action(line, chart : _chart.Chart, timing_group : _chart.TimingGroup):
+def _read_action(line, chart : _chart.Chart, timing_group : _chart.TimingGroup, filtered=False):
     m = re.search(_Re_action, line)
     if m is None:
         print(f'Warning: unidentified line "{line}"')
@@ -62,18 +62,22 @@ def _read_action(line, chart : _chart.Chart, timing_group : _chart.TimingGroup):
     try:
         if action_name == '':
             # note
-            action = _chart.GroundNote(*_analyze_args(args, _Arg_note))
-            timing_group.notes.append(action)
+            if not filtered:
+                action = _chart.GroundNote(*_analyze_args(args, _Arg_note))
+                timing_group.notes.append(action)
         elif action_name == 'hold':
-            action = _chart.Hold(*_analyze_args(args, _Arg_hold))
-            timing_group.holds.append(action)
+            if not filtered:
+                action = _chart.Hold(*_analyze_args(args, _Arg_hold))
+                timing_group.holds.append(action)
         elif action_name == 'arc':
-            taps = _read_extra_args(extra_args)
-            arc = _chart.Arc(*_analyze_args(args, _Arg_arc), taps=taps)
-            timing_group.arcs.append(arc)
+            if not filtered:
+                taps = _read_extra_args(extra_args)
+                arc = _chart.Arc(*_analyze_args(args, _Arg_arc), taps=taps)
+                timing_group.arcs.append(arc)
         elif action_name == 'timing':
-            action = _chart.Timing(*_analyze_args(args, _Arg_timing))
-            timing_group.timings.append(action)
+            if not filtered:
+                action = _chart.Timing(*_analyze_args(args, _Arg_timing))
+                timing_group.timings.append(action)
         elif action_name == 'scenecontrol':
             _read_scene_control(args, chart, timing_group)
         else:
@@ -105,8 +109,7 @@ def _read_timing_group_args(timing_group, args):
 def _read_timing_group(chart, lines, args=None, depth=0, read_noinput=True):
     timing_group = _chart.TimingGroup()
     res = _read_timing_group_args(timing_group, args)
-    if not read_noinput and res.get('noinput', False):
-        return None
+    filtered = not read_noinput and res.get('noinput', False)
     chart.timing_groups.append(timing_group)
     while lines:
         line = lines.pop()
@@ -116,7 +119,7 @@ def _read_timing_group(chart, lines, args=None, depth=0, read_noinput=True):
         elif re.search(_Re_timing_group_end, line):
             break
         else:
-            _read_action(line, chart, timing_group)
+            _read_action(line, chart, timing_group, filtered=filtered)
     return timing_group
 
 def read(chart : str, read_noinput=True):
