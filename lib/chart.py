@@ -258,7 +258,7 @@ def _pos_to_x(x : float):
 
 def _pos_to_height_ratio(y : float):
     # The y span is from -0.2? to 1.61?
-    vision_height = 4
+    vision_height = 3
     same_size_height = 0
 
     y_distance = vision_height + same_size_height - y
@@ -745,18 +745,62 @@ class TimingGroup(_Drawable):
             tolerance = 0
         self.arc_groups = group_arcs(self.arcs, tolerance)
 
+    @classmethod
+    def _bsearch_arcnotes(cls, arc_notes, time, left_bound=False):
+        left, right = 0, len(arc_notes)
+        if left_bound:
+            while left < right:
+                mid = (left + right) >> 1
+                if arc_notes[mid][1] < time:
+                    left = mid + 1
+                else:
+                    right = mid
+            return left
+        else:
+            while left < right:
+                mid = (left + right) >> 1
+                if arc_notes[mid][1] <= time:
+                    left = mid + 1
+                else:
+                    right = mid
+            return left - 1
+
     def draw(self, image : Image.Image, draw : ImageDraw.ImageDraw, track_meta : TrackMetaInfo, speed : float):
         for hold in self.holds:
             hold.draw(image, draw, track_meta, speed)
         for note in self.notes:
             note.draw(image, draw, track_meta, speed)
         arc_notes = []
+        for arc in self.arcs:
+            arc_notes.extend(arc.arc_notes())
+        arc_notes.sort(reverse=True)
+        arc_note_label = [False for i in range(len(arc_notes))]
+
+        for arc in self.arcs:
+            if arc.color < 0:
+                # Black lines are not taken into consideration
+                continue
+            start, end = arc.start, arc.end
+            left_index = self._bsearch_arcnotes(arc_notes, start, left_bound=True)
+            right_index = self._bsearch_arcnotes(arc_notes, end, left_bound=False)
+            if left_index >= len(arc_notes) or right_index < 0:
+                continue
+            for index in range(left_index, right_index + 1):
+                y, time, x = arc_notes[index]
+                x_arc, y_arc = arc.position(time)
+                if y_arc > y:
+                    arc_note_label[index] = True
+
+        for arc_note, is_overlapped in zip(arc_notes, arc_note_label):
+            if is_overlapped:
+                y, time, x = arc_note
+                Arc.draw_arc_note(x, y, time, image, draw, track_meta, speed)
+
         line_image = Image.new('RGBA', image.size, (0, 0, 0, 0))
         line_draw = ImageDraw.Draw(line_image)
         color_images = {}
         for arc_group in self.arc_groups:
             arc_group : ArcGroups
-            arc_notes.extend(arc_group.arc_notes())
             color = arc_group.color
             if color < 0 and track_meta.draw_black_line:
                 arc_group.draw(line_image, line_draw, track_meta, speed)
@@ -781,9 +825,10 @@ class TimingGroup(_Drawable):
             image.alpha_composite(line_image)
         image.alpha_composite(new_image)
 
-        arc_notes.sort(reverse=True)
-        for y, time, x in arc_notes:
-            Arc.draw_arc_note(x, y, time, image, draw, track_meta, speed)
+        for arc_note, is_overlapped in zip(arc_notes, arc_note_label):
+            if not is_overlapped:
+                y, time, x = arc_note
+                Arc.draw_arc_note(x, y, time, image, draw, track_meta, speed)
 
         return image
 
