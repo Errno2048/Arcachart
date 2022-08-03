@@ -3,8 +3,8 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageChops
 from tqdm import tqdm
 
-VISION_HEIGHT = 6
-VISION_CAP = 5
+VISION_HEIGHT = 4
+VISION_CAP = 3
 # -0.2?
 GROUND_HEIGHT = 0
 
@@ -28,7 +28,7 @@ class TrackMetaInfo:
         self.height_limit = 24000
         self.speed = 2000
         self.group_tolerance = 0
-        self.draw_black_line = False
+        self.draw_black_line = True
         self.enable_shadow = False
         self.shadow_color = (0, 0, 0, 63)
 
