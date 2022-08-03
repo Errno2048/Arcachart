@@ -3,10 +3,13 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageChops
 from tqdm import tqdm
 
-VISION_HEIGHT = 6
-VISION_CAP = 3
-# -0.2?
+VISION_HEIGHT = 2.4
+VISION_CAP = 1.61
 GROUND_HEIGHT = 0
+# -0.2?
+TAP_VISION_HEIGHT = 6
+TAP_VISION_CAP = 1.61
+TAP_GROUND_HEIGHT = 0.5
 
 LIGHT_HEIGHT = 10
 
@@ -285,10 +288,10 @@ def _arc_pos_to_height_ratio(y : float):
     return g_distance / y_distance
 
 def _tap_pos_to_height_ratio(y : float):
-    vision_height = VISION_HEIGHT
-    same_size_height = GROUND_HEIGHT
-    if y > VISION_CAP:
-        y = VISION_CAP
+    vision_height = TAP_VISION_HEIGHT
+    same_size_height = TAP_GROUND_HEIGHT
+    if y > TAP_VISION_CAP:
+        y = TAP_VISION_CAP
 
     y_distance = vision_height - y
     g_distance = vision_height - same_size_height
@@ -481,8 +484,8 @@ def group_arcs(arcs, tolerance=0):
 class ArcGroups(_Drawable):
     # Pixels of small lines
     DRAW_DIFFERENTIAL_LENGTH = 20
-    BASE_ARC_WIDTH = 60
-    BASE_LINE_WIDTH = 15
+    BASE_ARC_WIDTH = 40
+    BASE_LINE_WIDTH = 10
 
     def __init__(self, arcs=None, color=None):
         if arcs is None:
@@ -689,7 +692,7 @@ class ArcGroups(_Drawable):
             fill_color = (223, 223, 63, 127)
         else:
             # line
-            fill_color = (223, 31, 255, 95)
+            fill_color = (127, 15, 191, 63)
         real_pos = []
         for x, y in pos:
             real_pos.append((round(x * track_meta.zoom), round(y * track_meta.zoom)))
