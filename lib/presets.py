@@ -7,8 +7,8 @@ _default = _TrackMetaInfo(
     hold_file='assets/default_hold.png',
     arc_file='assets/default_arc.png',
 )
-_light.bar_line_color = (127, 127, 127, 255)
-_light.track_line_color = (127, 127, 127, 255)
+_default.bar_line_color = (127, 127, 127, 255)
+_default.track_line_color = (127, 127, 127, 255)
 
 _light = _TrackMetaInfo(
     track_file='assets/track.png',
