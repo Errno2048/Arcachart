@@ -521,6 +521,8 @@ class ArcGroups(_Drawable):
         right_pos = []
         slopes = [self.arcs[i].x_slope(self.arcs[i].start) for i in range(1, len(self.arcs))]
         slopes.append(self.arcs[-1].x_slope(self.arcs[-1].end))
+        prev_left = None
+        prev_right = None
         for arc, next_slope in zip(self.arcs, slopes):
             arc : Arc
             next_angle = math.atan(Arc.x_real_slope(speed, next_slope))
@@ -545,6 +547,15 @@ class ArcGroups(_Drawable):
                     left_pos.append((x_start, y_base - sign_factor * w_initial // 2))
                     right_pos.append((x_start, y_base + sign_factor * w_initial // 2))
                 if x_pos is not None:
+                    # The last position pair
+                    # left: (angle1 + angle2 + pi) / 2
+                    # right: (angle1 + angle2 - pi) / 2
+                    w_end = base_width * _pos_to_height_ratio(arc.y_end)
+                    a_left = (current_angle + next_angle + math.pi) / 2
+                    a_right = (current_angle + next_angle - math.pi) / 2
+                    left_end = self.pos_from_angle(a_left, w_end // 2, base=(x_end, y_base))
+                    right_end = self.pos_from_angle(a_right, w_end // 2, base=(x_end, y_base))
+
                     y_for_x = (arc.y_end - arc.y_start) / (x_end - x_start)
                     for index in range(len(x_pos) - 1):
                         dx_start, dx_end = x_pos[index], x_pos[index + 1]
@@ -553,24 +564,35 @@ class ArcGroups(_Drawable):
                         #w_start = base_width * _pos_to_height_ratio(dy_start)
                         w_end = base_width * _pos_to_height_ratio(dy_end)
 
+                        if sign_factor > 0:
+                            # x_start < x_end, discard right pos at the end, discard left pos at the beginning
+                            if prev_left is None or dx_end > prev_left[0]:
+                                left_pos.append((dx_end, y_base - sign_factor * w_end // 2))
+                            if dx_end < right_end[0]:
+                                right_pos.append((dx_end, y_base + sign_factor * w_end // 2))
+                        else:
+                            # x_start > x_end, discard left pos at the end, discard right pos at the beginning
+                            if prev_right is None or dx_end < prev_right[0]:
+                                right_pos.append((dx_end, y_base + sign_factor * w_end // 2))
+                            if dx_end > left_end[0]:
+                                left_pos.append((dx_end, y_base - sign_factor * w_end // 2))
+
                         left_pos.append((dx_end, y_base - sign_factor * w_end // 2))
                         right_pos.append((dx_end, y_base + sign_factor * w_end // 2))
-                    # The last position pair
-                    # left: (angle1 + angle2 + pi) / 2
-                    # right: (angle1 + angle2 - pi) / 2
-                    w_end = base_width * _pos_to_height_ratio(arc.y_end)
-                    a_left = (current_angle + next_angle + math.pi) / 2
-                    a_right = (current_angle + next_angle - math.pi) / 2
-                    left_pos.append(self.pos_from_angle(a_left, w_end // 2, base=(x_end, y_base)))
-                    right_pos.append(self.pos_from_angle(a_right, w_end // 2, base=(x_end, y_base)))
+                    left_pos.append(left_end)
+                    right_pos.append(right_end)
+                    prev_left, prev_right = left_end, right_end
                 else:
                     # x_start == x_end
                     current_angle = 0
                     w_end = base_width * _pos_to_height_ratio(arc.y_end)
                     a_left = (current_angle + next_angle + math.pi) / 2
                     a_right = (current_angle + next_angle - math.pi) / 2
-                    left_pos.append(self.pos_from_angle(a_left, w_end // 2, base=(x_end, y_base)))
-                    right_pos.append(self.pos_from_angle(a_right, w_end // 2, base=(x_end, y_base)))
+                    left_end = self.pos_from_angle(a_left, w_end // 2, base=(x_end, y_base))
+                    right_end = self.pos_from_angle(a_right, w_end // 2, base=(x_end, y_base))
+                    left_pos.append(left_end)
+                    right_pos.append(right_end)
+                    prev_left, prev_right = left_end, right_end
             else:
                 # ordinary arc
                 time_points = self.arc_sequence(arc, speed)
@@ -578,19 +600,7 @@ class ArcGroups(_Drawable):
                     _start_index = 0
                 else:
                     _start_index = 1
-                for current_time in time_points[_start_index:-1]:
-                    real_slope = arc.x_real_slope(speed, arc.x_slope(current_time))
-                    current_x, current_y = arc.position(current_time)
-                    real_x = _pos_to_x(current_x)
-                    real_w = base_width * _pos_to_height_ratio(current_y)
-                    real_y = _time_to_height(current_time, speed)
-                    current_angle = math.atan(real_slope)
 
-                    _left_pos = self.pos_from_angle(current_angle + math.pi / 2, real_w // 2, base=(real_x, real_y))
-                    _right_pos = self.pos_from_angle(current_angle - math.pi / 2, real_w // 2, base=(real_x, real_y))
-                    #print(current_time, _left_pos, _right_pos, real_w)
-                    left_pos.append(_left_pos)
-                    right_pos.append(_right_pos)
                 # The last point
                 current_time = time_points[-1]
                 real_slope = arc.x_real_slope(speed, arc.x_slope(current_time))
@@ -602,11 +612,29 @@ class ArcGroups(_Drawable):
                 a_left = (current_angle + next_angle + math.pi) / 2
                 a_right = (current_angle + next_angle - math.pi) / 2
 
-                _left_pos = self.pos_from_angle(a_left, real_w // 2, base=(real_x, real_y))
-                _right_pos = self.pos_from_angle(a_right, real_w // 2, base=(real_x, real_y))
+                left_pos_end = self.pos_from_angle(a_left, real_w // 2, base=(real_x, real_y))
+                right_pos_end = self.pos_from_angle(a_right, real_w // 2, base=(real_x, real_y))
+
+                for current_time in time_points[_start_index:-1]:
+                    real_slope = arc.x_real_slope(speed, arc.x_slope(current_time))
+                    current_x, current_y = arc.position(current_time)
+                    real_x = _pos_to_x(current_x)
+                    real_w = base_width * _pos_to_height_ratio(current_y)
+                    real_y = _time_to_height(current_time, speed)
+                    current_angle = math.atan(real_slope)
+
+                    _left_pos = self.pos_from_angle(current_angle + math.pi / 2, real_w // 2, base=(real_x, real_y))
+                    _right_pos = self.pos_from_angle(current_angle - math.pi / 2, real_w // 2, base=(real_x, real_y))
+                    #print(current_time, _left_pos, _right_pos, real_w)
+                    # ordinary arcs can simply compare time
+                    if (prev_left is None or prev_left[1] < _left_pos[1]) and  _left_pos[1] < left_pos_end[1]:
+                        left_pos.append(_left_pos)
+                    if (prev_right is None or prev_right[1] < _right_pos[1]) and  _right_pos[1] < right_pos_end[1]:
+                        right_pos.append(_right_pos)
                 #print(current_time, _left_pos, _right_pos, real_w)
-                left_pos.append(_left_pos)
-                right_pos.append(_right_pos)
+                left_pos.append(left_pos_end)
+                right_pos.append(right_pos_end)
+                prev_left, prev_right = left_pos_end, right_pos_end
             #print('\n'.join(map(str, zip(left_pos, right_pos))))
         pos = []
         pos.extend(left_pos)
