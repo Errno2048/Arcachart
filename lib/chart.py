@@ -5,6 +5,10 @@ from tqdm import tqdm
 
 VISION_HEIGHT = 6
 VISION_CAP = 5
+# -0.2?
+GROUND_HEIGHT = 0
+
+LIGHT_HEIGHT = 10
 
 def _zoomed(tup, zoom):
     return tuple(map(lambda x: round(x * zoom), tup))
@@ -262,21 +266,32 @@ def _pos_to_x(x : float):
 def _arc_pos_to_height_ratio(y : float):
     # The y span is from -0.2? to 1.61?
     vision_height = VISION_HEIGHT
-    same_size_height = 0
+    same_size_height = GROUND_HEIGHT
     if y > VISION_CAP:
         y = VISION_CAP
 
-    y_distance = vision_height + same_size_height - y
-    return vision_height / y_distance
+    y_distance = vision_height - y
+    g_distance = vision_height - same_size_height
+    return g_distance / y_distance
 
 def _tap_pos_to_height_ratio(y : float):
     vision_height = VISION_HEIGHT
-    same_size_height = 0
+    same_size_height = GROUND_HEIGHT
     if y > VISION_CAP:
         y = VISION_CAP
 
-    y_distance = vision_height + same_size_height - y
-    return vision_height / y_distance
+    y_distance = vision_height - y
+    g_distance = vision_height - same_size_height
+    return g_distance / y_distance
+
+def _pos_shadow(x, y):
+    light = LIGHT_HEIGHT
+    ground = GROUND_HEIGHT
+    y_distance = light - y
+    g_distance = light - ground
+    ratio = g_distance / y_distance
+    new_x = ratio * x
+    return new_x
 
 def _time_to_height(time, speed : float):
     return speed * time / 1000
