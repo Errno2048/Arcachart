@@ -658,6 +658,8 @@ class Timing:
 
     @property
     def bar_span(self):
+        if self.bpm <= 0:
+            return None
         return 60000 * self.beats / self.bpm
 
     def __lt__(self, other):
@@ -793,9 +795,14 @@ class Chart:
             self.total_time = max(self.total_time, timing_group.total_time)
         self.total_draw_time = self.total_time
         if self.timing_groups:
-            last_timing : Timing = self.timing_groups[0].timings[-1]
-            last_time = last_timing.time
-            bar_span = last_timing.bar_span
+            bar_span = None
+            index = -1
+            while bar_span is None:
+                last_timing : Timing = self.timing_groups[0].timings[index]
+                last_time = last_timing.time
+                bar_span = last_timing.bar_span
+                index -= 1
+            assert bar_span is not None, 'BPM is zero'
             self.total_draw_time = last_time + math.ceil((self.total_draw_time - last_time) / bar_span) * bar_span
 
     def background(self, speed, track_meta : TrackMetaInfo):
@@ -874,6 +881,8 @@ class Chart:
             else:
                 end = self.total_draw_time
             bar_span = timing.bar_span
+            if bar_span is None:
+                continue
             if index == 0:
                 start = start + bar_span
             bars.extend(np.arange(start, end, bar_span))
