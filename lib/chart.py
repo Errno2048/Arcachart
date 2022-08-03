@@ -29,6 +29,8 @@ class TrackMetaInfo:
         self.speed = 2000
         self.group_tolerance = 0
         self.draw_black_line = False
+        self.enable_shadow = False
+        self.shadow_color = (0, 0, 0, 63)
 
     def clone(self):
         res = self.__class__()
@@ -208,6 +210,14 @@ class TrackMetaInfo:
         new_w, new_h = round(w * ratio ), round(h * ratio)
         return self.__stretch(new_w, new_h, base)
 
+    def arc_to_shadow(self, ratio):
+        res = self.arc_to_image(ratio)
+        shadow = Image.new('RGBA', res.size, self.shadow_color)
+        bg = Image.new('RGBA', res.size, (0, 0, 0, 0))
+        bg.paste(shadow, mask=res)
+        return bg
+
+
 class Easing:
     STRAIGHT = 0
     SINE_IN = 1
@@ -284,14 +294,13 @@ def _tap_pos_to_height_ratio(y : float):
     g_distance = vision_height - same_size_height
     return g_distance / y_distance
 
-def _pos_shadow(x, y):
+def _shadow_pos_to_height_ratio(y):
     light = LIGHT_HEIGHT
     ground = GROUND_HEIGHT
     y_distance = light - y
     g_distance = light - ground
     ratio = g_distance / y_distance
-    new_x = ratio * x
-    return new_x
+    return ratio
 
 def _time_to_height(time, speed : float):
     return speed * time / 1000
@@ -685,7 +694,7 @@ class ArcGroups(_Drawable):
         for x, y in pos:
             real_pos.append((round(x * track_meta.zoom), round(y * track_meta.zoom)))
         draw.polygon(real_pos, fill=fill_color)
-        return image
+        return image, pos
 
 class Camera:
     def __init__(self, time, transverse, bottomzoom, linezoom, steadyangle, topzoom, angle, easing, lastingtime):
@@ -817,10 +826,17 @@ class TimingGroup(_Drawable):
                 if y_arc > y:
                     arc_note_label[index] = True
 
+        #shadow_image = Image.new('RGBA', image.size, (0, 0, 0, 0))
+        #shadow_draw = ImageDraw.Draw(shadow_image)
+
+        arc_note_image1 = Image.new('RGBA', image.size, (0, 0, 0, 0))
+        arc_note_draw1 = ImageDraw.Draw(arc_note_image1)
+
         for arc_note, is_overlapped in zip(arc_notes, arc_note_label):
             if is_overlapped:
                 y, time, x = arc_note
-                Arc.draw_arc_note(x, y, time, image, draw, track_meta, speed)
+                Arc.draw_arc_note(x, y, time, arc_note_image1, arc_note_draw1, track_meta, speed)
+
 
         line_image = Image.new('RGBA', image.size, (0, 0, 0, 0))
         line_draw = ImageDraw.Draw(line_image)
@@ -848,14 +864,20 @@ class TimingGroup(_Drawable):
             new_image[:, :, :3] = np.min(np.stack([new_image[:, :, :3], color_channels], axis=0), axis=0)
             new_image[:, :, 3] = np.max(np.stack([new_image[:, :, 3], alpha_channel], axis=0), axis=0)
         new_image = Image.fromarray(new_image, mode='RGBA')
-        if track_meta.draw_black_line:
-            image.alpha_composite(line_image)
-        image.alpha_composite(new_image)
+
+        arc_note_image2 = Image.new('RGBA', image.size, (0, 0, 0, 0))
+        arc_note_draw2 = ImageDraw.Draw(arc_note_image2)
 
         for arc_note, is_overlapped in zip(arc_notes, arc_note_label):
             if not is_overlapped:
                 y, time, x = arc_note
-                Arc.draw_arc_note(x, y, time, image, draw, track_meta, speed)
+                Arc.draw_arc_note(x, y, time, arc_note_image2, arc_note_draw2, track_meta, speed)
+
+        image.alpha_composite(arc_note_image1)
+        if track_meta.draw_black_line:
+            image.alpha_composite(line_image)
+        image.alpha_composite(new_image)
+        image.alpha_composite(arc_note_image2)
 
         return image
 
