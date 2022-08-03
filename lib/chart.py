@@ -540,9 +540,10 @@ class ArcGroups(_Drawable):
                     x_pos = None
                 if not left_pos or not right_pos:
                     # left_pos and right_pos is empty
+                    # TODO: to check if the sign_factor is correct or inversed
                     w_initial = base_width * _pos_to_height_ratio(arc.y_start)
-                    left_pos.append((x_start, y_base + sign_factor * w_initial // 2))
-                    right_pos.append((x_start, y_base - sign_factor * w_initial // 2))
+                    left_pos.append((x_start, y_base - sign_factor * w_initial // 2))
+                    right_pos.append((x_start, y_base + sign_factor * w_initial // 2))
                 if x_pos is not None:
                     y_for_x = (arc.y_end - arc.y_start) / (x_end - x_start)
                     for index in range(len(x_pos) - 1):
@@ -552,8 +553,8 @@ class ArcGroups(_Drawable):
                         #w_start = base_width * _pos_to_height_ratio(dy_start)
                         w_end = base_width * _pos_to_height_ratio(dy_end)
 
-                        left_pos.append((dx_end, y_base + sign_factor * w_end // 2))
-                        right_pos.append((dx_end, y_base - sign_factor * w_end // 2))
+                        left_pos.append((dx_end, y_base - sign_factor * w_end // 2))
+                        right_pos.append((dx_end, y_base + sign_factor * w_end // 2))
                     # The last position pair
                     # left: (angle1 + angle2 + pi) / 2
                     # right: (angle1 + angle2 - pi) / 2
