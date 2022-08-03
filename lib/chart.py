@@ -3,6 +3,9 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageChops
 from tqdm import tqdm
 
+VISION_HEIGHT = 6
+VISION_CAP = 5
+
 def _zoomed(tup, zoom):
     return tuple(map(lambda x: round(x * zoom), tup))
 
@@ -256,13 +259,24 @@ def _pos_to_x(x : float):
     # The x span is from -1 to 2
     return 36 + (x + 1) * 1428 / 3
 
-def _pos_to_height_ratio(y : float):
+def _arc_pos_to_height_ratio(y : float):
     # The y span is from -0.2? to 1.61?
-    vision_height = 3
+    vision_height = VISION_HEIGHT
     same_size_height = 0
+    if y > VISION_CAP:
+        y = VISION_CAP
 
     y_distance = vision_height + same_size_height - y
-    return y_distance / vision_height
+    return vision_height / y_distance
+
+def _tap_pos_to_height_ratio(y : float):
+    vision_height = VISION_HEIGHT
+    same_size_height = 0
+    if y > VISION_CAP:
+        y = VISION_CAP
+
+    y_distance = vision_height + same_size_height - y
+    return vision_height / y_distance
 
 def _time_to_height(time, speed : float):
     return speed * time / 1000
@@ -375,7 +389,7 @@ class Arc(_Drawable):
 
     @classmethod
     def draw_arc_note(cls, x, y, time, image : Image.Image, draw : ImageDraw.ImageDraw, track_meta: TrackMetaInfo, speed):
-        ratio = _pos_to_height_ratio(y)
+        ratio = _tap_pos_to_height_ratio(y)
         arc_note = track_meta.arc_to_image(ratio)
         real_x = round(_pos_to_x(x) * track_meta.zoom - arc_note.size[0] / 2)
         # TODO: -1/2?
@@ -543,14 +557,14 @@ class ArcGroups(_Drawable):
                 if not left_pos or not right_pos:
                     # left_pos and right_pos is empty
                     # TODO: to check if the sign_factor is correct or inversed
-                    w_initial = base_width * _pos_to_height_ratio(arc.y_start)
+                    w_initial = base_width * _arc_pos_to_height_ratio(arc.y_start)
                     left_pos.append((x_start, y_base - sign_factor * w_initial // 2))
                     right_pos.append((x_start, y_base + sign_factor * w_initial // 2))
                 if x_pos is not None:
                     # The last position pair
                     # left: (angle1 + angle2 + pi) / 2
                     # right: (angle1 + angle2 - pi) / 2
-                    w_end = base_width * _pos_to_height_ratio(arc.y_end)
+                    w_end = base_width * _arc_pos_to_height_ratio(arc.y_end)
                     a_left = (current_angle + next_angle + math.pi) / 2
                     a_right = (current_angle + next_angle - math.pi) / 2
                     left_end = self.pos_from_angle(a_left, w_end // 2, base=(x_end, y_base))
@@ -561,8 +575,8 @@ class ArcGroups(_Drawable):
                         dx_start, dx_end = x_pos[index], x_pos[index + 1]
                         #dy_start = y_for_x * (dx_start - x_start)
                         dy_end = y_for_x * (dx_end - x_start)
-                        #w_start = base_width * _pos_to_height_ratio(dy_start)
-                        w_end = base_width * _pos_to_height_ratio(dy_end)
+                        #w_start = base_width * _arc_pos_to_height_ratio(dy_start)
+                        w_end = base_width * _arc_pos_to_height_ratio(dy_end)
 
                         if sign_factor > 0:
                             # x_start < x_end, discard right pos at the end, discard left pos at the beginning
@@ -585,7 +599,7 @@ class ArcGroups(_Drawable):
                 else:
                     # x_start == x_end
                     current_angle = 0
-                    w_end = base_width * _pos_to_height_ratio(arc.y_end)
+                    w_end = base_width * _arc_pos_to_height_ratio(arc.y_end)
                     a_left = (current_angle + next_angle + math.pi) / 2
                     a_right = (current_angle + next_angle - math.pi) / 2
                     left_end = self.pos_from_angle(a_left, w_end // 2, base=(x_end, y_base))
@@ -606,7 +620,7 @@ class ArcGroups(_Drawable):
                 real_slope = arc.x_real_slope(speed, arc.x_slope(current_time))
                 current_x, current_y = arc.position(current_time)
                 real_x = _pos_to_x(current_x)
-                real_w = base_width * _pos_to_height_ratio(current_y)
+                real_w = base_width * _arc_pos_to_height_ratio(current_y)
                 real_y = _time_to_height(current_time, speed)
                 current_angle = math.atan(real_slope)
                 a_left = (current_angle + next_angle + math.pi) / 2
@@ -619,7 +633,7 @@ class ArcGroups(_Drawable):
                     real_slope = arc.x_real_slope(speed, arc.x_slope(current_time))
                     current_x, current_y = arc.position(current_time)
                     real_x = _pos_to_x(current_x)
-                    real_w = base_width * _pos_to_height_ratio(current_y)
+                    real_w = base_width * _arc_pos_to_height_ratio(current_y)
                     real_y = _time_to_height(current_time, speed)
                     current_angle = math.atan(real_slope)
 
