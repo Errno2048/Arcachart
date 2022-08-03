@@ -481,8 +481,8 @@ def group_arcs(arcs, tolerance=0):
 class ArcGroups(_Drawable):
     # Pixels of small lines
     DRAW_DIFFERENTIAL_LENGTH = 20
-    BASE_ARC_WIDTH = 80
-    BASE_LINE_WIDTH = 20
+    BASE_ARC_WIDTH = 60
+    BASE_LINE_WIDTH = 15
 
     def __init__(self, arcs=None, color=None):
         if arcs is None:
