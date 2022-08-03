@@ -3,7 +3,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageChops
 from tqdm import tqdm
 
-VISION_HEIGHT = 4
+VISION_HEIGHT = 6
 VISION_CAP = 3
 # -0.2?
 GROUND_HEIGHT = 0
