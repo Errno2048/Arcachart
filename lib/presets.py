@@ -31,6 +31,7 @@ _dark.bar_line_color = (191, 191, 191, 255)
 _light.track_line_color = (191, 191, 191, 255)
 
 _presets = {
+    'default': _default,
     'light': _light,
     'dark': _dark,
 }
