@@ -16,7 +16,7 @@ def _zoomed(tup, zoom):
     return tuple(map(lambda x: round(x * zoom), tup))
 
 class TrackMetaInfo:
-    def __init__(self, track_file='assets/track.png', enwiden_file='assets/track_extralane_light.png', note_file='assets/note.png', hold_file='assets/note_hold.png', arc_file='assets/arc_body_hi.png'):
+    def __init__(self, track_file='assets/default_track.png', enwiden_file='assets/default_extralane.png', note_file='assets/default_note.png', hold_file='assets/default_hold.png', arc_file='assets/default_arc.png'):
         self.track_file = track_file
         self.enwiden_file = enwiden_file
         self.bar_line_width = 2
@@ -37,8 +37,8 @@ class TrackMetaInfo:
         self.yellow_color = (223, 223, 63, 127)
         self.black_color = (175, 95, 223, 95)
         self.extra_width = 0
-        self.extra_color = (0, 0, 0, 0)
-        self.font_color = (0, 0, 0, 255)
+        self.extra_color = (252, 248, 248, 255)
+        self.font_color = (0, 0, 0, 191)
         self.__font_size = 60
         self.font_file = "fonts/Exo-Regular.ttf"
         self.enable_shadow = False
@@ -412,6 +412,36 @@ class Arc(_Drawable):
         if taps is not None:
             for time in taps:
                 self.taps.append(time)
+
+    def _extra_width_pos(self, x, y, base_width):
+        real_x = _pos_to_x(x)
+        width = _arc_pos_to_height_ratio(y) * base_width
+        right = round(real_x + width / 2)
+        left = round(real_x - width / 2)
+        return max(0 - left, right - 1500)
+
+    def max_extra_width(self):
+        # There are some estimation errors,
+        #     mainly from the connection point of arcs
+        if self.color >= 0:
+            base_width = ArcGroups.BASE_ARC_WIDTH
+        else:
+            base_width = ArcGroups.BASE_LINE_WIDTH
+
+        res = max(
+            0,
+            self._extra_width_pos(self.x_start, self.y_start, base_width),
+            self._extra_width_pos(self.x_end, self.y_end, base_width),
+        )
+
+        for tap in self.taps:
+            x, y = self.position(tap)
+            width = 238 * _tap_pos_to_height_ratio(y)
+            real_x = _pos_to_x(x)
+            right = round(real_x + width / 2)
+            left = round(real_x - width / 2)
+            res = max(res, 0 - left, right - 1500)
+        return res
 
     def arc_notes(self):
         res = []
@@ -826,6 +856,12 @@ class TimingGroup(_Drawable):
         self.timings = []
         self.total_time = 0
 
+    def max_extra_width(self):
+        res = 0
+        for arc in self.arcs:
+            res = max(arc.max_extra_width(), res)
+        return res
+
     def clone(self):
         res = self.__class__()
         res.notes = self.notes
@@ -1009,6 +1045,12 @@ class Chart:
             meta = {}
         self.meta = meta
 
+    def max_extra_width(self):
+        res = 0
+        for timing_group in self.timing_groups:
+            res = max(timing_group.max_extra_width(), res)
+        return res
+
     def refine(self):
         self.enwidenlaneses.sort()
         self.total_time = 0
@@ -1131,7 +1173,7 @@ class Chart:
                         text_x = x_start + track_meta.extra_width + track_meta.font_size / 2
                     else:
                         text_x = x_start + track_meta.extra_width + track_meta.font_size / 2
-                    text_y = y + track_meta.font_size
+                    text_y = y
                     text = _ms_to_time(bar_time)
                     text = f'{text} {bar_index}'
                     text_info.append((bar_index, text, text_x, text_y))
@@ -1177,14 +1219,15 @@ class Chart:
             if prev_page < page:
                 prev_text_y = None
                 prev_page = page
-            rest_y = text_y % height_limit
+            rest_y = text_y % height_limit + track_meta.font_size
             if height_limit - rest_y < track_meta.font_size:
-                rest_y = text_y - track_meta.font_size
+                rest_y = rest_y - track_meta.font_size
             if prev_text_y is not None and rest_y - prev_text_y < track_meta.font_size:
                 continue
             prev_text_y = rest_y
-            real_y = height_limit - rest_y
+            real_y = height_limit - rest_y + track_meta.font_size / 2
             real_x = w * page + text_x
+            print(text_index, real_y, height_limit - rest_y)
             real_pos = _zoomed((real_x, real_y), track_meta.zoom)
             draw.text(real_pos, text, fill=track_meta.font_color, font=font, anchor='lm')
 

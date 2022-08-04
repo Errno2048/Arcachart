@@ -18,6 +18,8 @@ _light = _TrackMetaInfo(
 _light.bar_line_color = (127, 127, 127, 255)
 _light.track_line_color = (127, 127, 127, 255)
 _light.black_color = (175, 95, 223, 95)
+_light.font_color = (0, 0, 0, 191)
+_light.extra_color = (0, 0, 0, 0)
 
 _dark = _TrackMetaInfo(
     track_file='assets/track_dark.png',
@@ -29,6 +31,8 @@ _dark = _TrackMetaInfo(
 _dark.bar_line_color = (191, 191, 191, 255)
 _dark.track_line_color = (191, 191, 191, 255)
 _dark.black_color = (223, 127, 255, 95)
+_dark.font_color = (255, 255, 255, 191)
+_dark.extra_color = (0, 0, 0, 0)
 
 _light_tomato = _light.clone()
 _light_tomato.note_file = 'assets/note_tomato.png'
