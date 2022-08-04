@@ -57,7 +57,8 @@ def _read_scene_control(args, chart : _chart.Chart, timing_group : _chart.Timing
 def _read_action(line, chart : _chart.Chart, timing_group : _chart.TimingGroup, filtered=False):
     m = re.search(_Re_action, line)
     if m is None:
-        print(f'Warning: unidentified line "{line}"')
+        #print(f'Warning: unidentified line "{line}"')
+        return
     action_name, args, extra_args = m.groups()
     try:
         if action_name == '':

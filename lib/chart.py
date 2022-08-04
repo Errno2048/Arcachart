@@ -36,7 +36,7 @@ class TrackMetaInfo:
         self.shadow_color = (0, 0, 0, 63)
         self.blue_color = (63, 223, 255, 127)
         self.red_color = (255, 63, 191, 127)
-        self.green_color = (63, 255, 63, 127)
+        self.green_color = (63, 223, 63, 127)
         self.yellow_color = (223, 223, 63, 127)
         self.black_color = (175, 95, 223, 95)
 
