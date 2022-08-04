@@ -8,7 +8,8 @@ if __name__ == '__main__':
 
     parser.add_argument('file', type=str, nargs='+', help='Input aff files.')
     parser.add_argument('--preset', type=str, default='default', help='The preset of track style. The default value is "default".')
-    parser.add_argument('--speed', '-s', type=float, default=2000, help='Pixel per second. The default value is 2000.')
+    parser.add_argument('--speed', '-s', type=float, default=2000, help='Pixel per second (before zooming). The default value is 2000.')
+    parser.add_argument('--height', '-h', type=float, default=24000, help='The height of output image (before zooming). The default value is 24000.')
     parser.add_argument('--arc-group-tolerance', '-t', type=int, default=20,
                         help='Tolerance of span between arcs. '
                              'Arcs with a distance less than this value will be considered as in the same group. '
@@ -28,6 +29,7 @@ if __name__ == '__main__':
     preset.group_tolerance = args.arc_group_tolerance
     preset.zoom = args.zoom
     preset.draw_black_line = not args.ignore_black_line
+    preset.height_limit = args.height
 
     read_noinput = args.read_noinput
 
