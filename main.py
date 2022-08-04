@@ -51,7 +51,7 @@ if __name__ == '__main__':
     final_diff = None
 
     if not os.path.isabs(file_id):
-        songs_dir = f'songs/{file_id}'
+        songs_dir = f'assets/songs/{file_id}'
         if os.path.isdir(songs_dir):
             for diff in diffs:
                 _file = f'{songs_dir}/{diff}.aff'
