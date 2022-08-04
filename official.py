@@ -68,5 +68,4 @@ if __name__ == '__main__':
     output_file = f'{file_id}_{final_diff}.{format_}'
     chart = read(chart_data, read_noinput=read_noinput)
     image = chart.image(preset)
-    image.show()
     image.save(output_file, format=format_)

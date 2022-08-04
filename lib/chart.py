@@ -1,7 +1,6 @@
 import math
 import numpy as np
-from PIL import Image, ImageDraw, ImageChops
-from tqdm import tqdm
+from PIL import Image, ImageDraw, ImageFont
 
 VISION_HEIGHT = 2.4
 VISION_CAP = 1.61
@@ -32,13 +31,18 @@ class TrackMetaInfo:
         self.speed = 2000
         self.group_tolerance = 0
         self.draw_black_line = True
-        self.enable_shadow = False
-        self.shadow_color = (0, 0, 0, 63)
         self.blue_color = (63, 223, 255, 127)
         self.red_color = (255, 63, 191, 127)
         self.green_color = (63, 223, 63, 127)
         self.yellow_color = (223, 223, 63, 127)
         self.black_color = (175, 95, 223, 95)
+        self.extra_width = 0
+        self.extra_color = (0, 0, 0, 0)
+        self.font_color = (0, 0, 0, 255)
+        self.__font_size = 60
+        self.font_file = "fonts/Exo-Regular.ttf"
+        self.enable_shadow = False
+        self.shadow_color = (0, 0, 0, 63)
 
     def clone(self):
         res = self.__class__()
@@ -61,7 +65,39 @@ class TrackMetaInfo:
         res.green_color = self.green_color
         res.yellow_color = self.yellow_color
         res.black_color = self.black_color
+        res.extra_width = self.extra_width
+        res.extra_color = self.extra_color
+        res.font_color = self.font_color
+        res.font_size = self.font_size
+        res.font_file = self.font_file
+        res.enable_shadow = self.enable_shadow
+        res.shadow_color = self.shadow_color
         return res
+
+    @property
+    def font_file(self):
+        return self.__font_file
+
+    @font_file.setter
+    def font_file(self, value):
+        self.__font_file = value
+        self.__refresh_font()
+
+    @property
+    def font_size(self):
+        return self.__font_size
+
+    @font_size.setter
+    def font_size(self, value):
+        self.__font_size = value
+        self.__refresh_font()
+
+    def __refresh_font(self):
+        self.__font = ImageFont.truetype(self.__font_file, size=round(self.__font_size * self.__zoom))
+
+    @property
+    def font(self):
+        return self.__font
 
     @property
     def zoom(self):
@@ -73,6 +109,7 @@ class TrackMetaInfo:
         self.__refresh_note()
         self.__refresh_hold()
         self.__refresh_arc()
+        self.__refresh_font()
 
     @property
     def track_line_width(self):
@@ -337,7 +374,7 @@ class GroundNote(_Drawable):
         note_image = track_meta.note_to_image()
         dest_x = 36 + track_meta.track_line_width // 2 + 238 * self.lane
         # TODO: is - note_image.size[1] / 2 correct?
-        dest_x = round(dest_x * track_meta.zoom)
+        dest_x = round(dest_x * track_meta.zoom + track_meta.extra_width * track_meta.zoom)
         dest_y = round(_time_to_height(self.start, speed) * track_meta.zoom)# - note_image.size[1] / 2
         image.alpha_composite(note_image, dest=(dest_x, dest_y))
         return image
@@ -354,7 +391,7 @@ class Hold(_Drawable):
     def draw(self, image : Image.Image, draw : ImageDraw.ImageDraw, track_meta : TrackMetaInfo, speed : float):
         hold_image = track_meta.hold_to_image(round(_time_to_height(self.end - self.start, speed)))
         dest_x = 36 + track_meta.track_line_width // 2 + 238 * self.lane
-        dest_x = round(dest_x * track_meta.zoom)
+        dest_x = round(dest_x * track_meta.zoom + track_meta.extra_width * track_meta.zoom)
         dest_y = round(_time_to_height(self.start, speed) * track_meta.zoom)
         image.alpha_composite(hold_image, dest=(dest_x, dest_y))
         return image
@@ -428,7 +465,7 @@ class Arc(_Drawable):
     def draw_arc_note(cls, x, y, time, image : Image.Image, draw : ImageDraw.ImageDraw, track_meta: TrackMetaInfo, speed):
         ratio = _tap_pos_to_height_ratio(y)
         arc_note = track_meta.arc_to_image(ratio)
-        real_x = round(_pos_to_x(x) * track_meta.zoom - arc_note.size[0] / 2)
+        real_x = round(_pos_to_x(x) * track_meta.zoom - arc_note.size[0] / 2 + track_meta.extra_width * track_meta.zoom)
         # TODO: -1/2?
         real_y = round(_time_to_height(time, speed) * track_meta.zoom)
         image.alpha_composite(arc_note, dest=(real_x, real_y))
@@ -743,7 +780,7 @@ class ArcGroups(_Drawable):
             fill_color = track_meta.black_color
         real_pos = []
         for x, y in pos:
-            real_pos.append((round(x * track_meta.zoom), round(y * track_meta.zoom)))
+            real_pos.append((round(x * track_meta.zoom + track_meta.extra_width * track_meta.zoom), round(y * track_meta.zoom)))
         draw.polygon(real_pos, fill=fill_color)
         return image, pos
 
@@ -951,6 +988,17 @@ class EnwidenLanes:
             raise NotImplementedError()
         return self.time < other.time
 
+def _ms_to_time(time : int):
+    h = time // 3600000
+    m = (time % 3600000) // 60000
+    s = (time % 60000) // 1000
+    ms = time % 1000
+    if h == 0:
+        text = "%02d:%02d.%03d" % (m, s, ms)
+    else:
+        text = "%02d:%02d:%02d.%03d" % (h, m, s, ms)
+    return text
+
 class Chart:
     def __init__(self, meta=None):
         self.enwidenlaneses = []
@@ -1015,21 +1063,22 @@ class Chart:
         enwiden_times.append(self.total_draw_time)
 
         height_limit = track_meta.height_limit
-        total_height = _time_to_height(self.total_draw_time, speed)
+        # +64 to prevent ignoring notes at the end of the chart
+        total_height = _time_to_height(self.total_draw_time, speed) + 64
         total_height = math.ceil(total_height / height_limit) * height_limit
 
         track_base_image = track_meta.track_to_image(height=total_height)
         track_enwiden_image = track_meta.enwiden_to_image(height=total_height)
 
-        bg_image = Image.new('RGBA', _zoomed((1500, total_height), track_meta.zoom), (0, 0, 0, 255))
-        bg_image.paste(track_base_image, _zoomed((238, 0), track_meta.zoom), track_base_image)
-        bg_image.paste(track_enwiden_image, _zoomed((0, 0), track_meta.zoom), track_enwiden_image)
-        bg_image.paste(track_enwiden_image, _zoomed((1262, 0), track_meta.zoom), track_enwiden_image)
+        bg_image = Image.new('RGBA', _zoomed((1500 + track_meta.extra_width * 2, total_height), track_meta.zoom), track_meta.extra_color)
+        bg_image.paste(track_base_image, _zoomed((238 + track_meta.extra_width, 0), track_meta.zoom), track_base_image)
+        bg_image.paste(track_enwiden_image, _zoomed((0 + track_meta.extra_width, 0), track_meta.zoom), track_enwiden_image)
+        bg_image.paste(track_enwiden_image, _zoomed((1262 + track_meta.extra_width, 0), track_meta.zoom), track_enwiden_image)
 
         bg_draw = ImageDraw.Draw(bg_image)
-        bg_draw.line((_zoomed((512, 0), track_meta.zoom), _zoomed((512, total_height), track_meta.zoom)), track_meta.track_line_color, round(track_meta.track_line_width * track_meta.zoom))
-        bg_draw.line((_zoomed((750, 0), track_meta.zoom), _zoomed((750, total_height), track_meta.zoom)), track_meta.track_line_color, round(track_meta.track_line_width * track_meta.zoom))
-        bg_draw.line((_zoomed((988, 0), track_meta.zoom), _zoomed((988, total_height), track_meta.zoom)), track_meta.track_line_color, round(track_meta.track_line_width * track_meta.zoom))
+        bg_draw.line((_zoomed((512 + track_meta.extra_width, 0), track_meta.zoom), _zoomed((512 + track_meta.extra_width, total_height), track_meta.zoom)), track_meta.track_line_color, round(track_meta.track_line_width * track_meta.zoom))
+        bg_draw.line((_zoomed((750 + track_meta.extra_width, 0), track_meta.zoom), _zoomed((750 + track_meta.extra_width, total_height), track_meta.zoom)), track_meta.track_line_color, round(track_meta.track_line_width * track_meta.zoom))
+        bg_draw.line((_zoomed((988 + track_meta.extra_width, 0), track_meta.zoom), _zoomed((988 + track_meta.extra_width, total_height), track_meta.zoom)), track_meta.track_line_color, round(track_meta.track_line_width * track_meta.zoom))
 
         for enwiden_span in enwiden_spans:
             start, end = _time_to_height(enwiden_span[0], speed), _time_to_height(enwiden_span[1], speed)
@@ -1037,14 +1086,14 @@ class Chart:
             lane = track_enwiden_image.crop(_zoomed((0, start, 238, end), track_meta.zoom))
             # draw left lane
             left_border = track_base_image.crop(_zoomed((0, start, 36, end), track_meta.zoom))
-            bg_image.paste(left_border, _zoomed((0, start), track_meta.zoom), left_border)
-            bg_image.paste(lane, _zoomed((36, start), track_meta.zoom), lane)
+            bg_image.paste(left_border, _zoomed((0 + track_meta.extra_width, start), track_meta.zoom), left_border)
+            bg_image.paste(lane, _zoomed((36 + track_meta.extra_width, start), track_meta.zoom), lane)
             # draw right lane
             right_border = track_base_image.crop(_zoomed((988, start, 1024, end), track_meta.zoom))
-            bg_image.paste(right_border, _zoomed((1464, start), track_meta.zoom), right_border)
-            bg_image.paste(lane, _zoomed((1226, start), track_meta.zoom), lane)
-            bg_draw.line((_zoomed((274, start), track_meta.zoom), _zoomed((274, end), track_meta.zoom)), track_meta.track_line_color, round(track_meta.track_line_width * track_meta.zoom))
-            bg_draw.line((_zoomed((1226, start), track_meta.zoom), _zoomed((1226, end), track_meta.zoom)), track_meta.track_line_color, round(track_meta.track_line_width * track_meta.zoom))
+            bg_image.paste(right_border, _zoomed((1464 + track_meta.extra_width, start), track_meta.zoom), right_border)
+            bg_image.paste(lane, _zoomed((1226 + track_meta.extra_width, start), track_meta.zoom), lane)
+            bg_draw.line((_zoomed((274 + track_meta.extra_width, start), track_meta.zoom), _zoomed((274 + track_meta.extra_width, end), track_meta.zoom)), track_meta.track_line_color, round(track_meta.track_line_width * track_meta.zoom))
+            bg_draw.line((_zoomed((1226 + track_meta.extra_width, start), track_meta.zoom), _zoomed((1226 + track_meta.extra_width, end), track_meta.zoom)), track_meta.track_line_color, round(track_meta.track_line_width * track_meta.zoom))
 
         bars = []
         main_timing_group : TimingGroup = self.timing_groups[0]
@@ -1063,6 +1112,7 @@ class Chart:
 
         bar_index = 0
         bar_total = len(bars)
+        text_info = []
         for index in range(len(enwiden_times) - 1):
             start_time, end_time, is_enwiden = enwiden_times[index], enwiden_times[index + 1], index & 1
             while bar_index < bar_total:
@@ -1075,17 +1125,27 @@ class Chart:
                     else:
                         x_start, x_end = 274, 1226
                     y = round(_time_to_height(bar_time, speed))
-                    bg_draw.line((_zoomed((x_start, y), track_meta.zoom), _zoomed((x_end, y), track_meta.zoom)), track_meta.bar_line_color, round(track_meta.bar_line_width * track_meta.zoom))
+                    bg_draw.line((_zoomed((x_start + track_meta.extra_width, y), track_meta.zoom), _zoomed((x_end + track_meta.extra_width, y), track_meta.zoom)), track_meta.bar_line_color, round(track_meta.bar_line_width * track_meta.zoom))
+
+                    if is_enwiden:
+                        text_x = x_start + track_meta.extra_width + track_meta.font_size / 2
+                    else:
+                        text_x = x_start + track_meta.extra_width + track_meta.font_size / 2
+                    text_y = y + track_meta.font_size
+                    text = _ms_to_time(bar_time)
+                    text = f'{text} {bar_index}'
+                    text_info.append((bar_index, text, text_x, text_y))
+
                     bar_index += 1
                 else:
                     break
 
-        return bg_image
+        return bg_image, text_info
 
     def image(self, track_meta : TrackMetaInfo):
         self.refine()
         speed = track_meta.speed
-        image = self.background(speed, track_meta)
+        image, text_info = self.background(speed, track_meta)
         draw = ImageDraw.Draw(image)
         merged_timing_group = TimingGroup()
         for tg in self.timing_groups:
@@ -1105,4 +1165,27 @@ class Chart:
             new_x_start = index * w
             new_image.paste(image.crop((0, y_start, w, y_end)), (new_x_start, 0))
         new_image = new_image.transpose(Image.FLIP_TOP_BOTTOM)
+
+        draw = ImageDraw.Draw(new_image)
+        font = track_meta.font
+        prev_text_y = None
+        prev_page = -1
+        height_limit = track_meta.height_limit
+        w = 1500 + track_meta.extra_width * 2
+        for text_index, text, text_x, text_y in text_info:
+            page = text_y // height_limit
+            if prev_page < page:
+                prev_text_y = None
+                prev_page = page
+            rest_y = text_y % height_limit
+            if height_limit - rest_y < track_meta.font_size:
+                rest_y = text_y - track_meta.font_size
+            if prev_text_y is not None and rest_y - prev_text_y < track_meta.font_size:
+                continue
+            prev_text_y = rest_y
+            real_y = height_limit - rest_y
+            real_x = w * page + text_x
+            real_pos = _zoomed((real_x, real_y), track_meta.zoom)
+            draw.text(real_pos, text, fill=track_meta.font_color, font=font, anchor='lm')
+
         return new_image
