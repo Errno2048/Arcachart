@@ -1,6 +1,7 @@
 import math
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
+import os
 
 VISION_HEIGHT = 2.4
 VISION_CAP = 1.61
@@ -14,6 +15,11 @@ LIGHT_HEIGHT = 10
 
 def _zoomed(tup, zoom):
     return tuple(map(lambda x: round(x * zoom), tup))
+
+def _file_default(value, default):
+    if os.path.isfile(value):
+        return value
+    return default
 
 class TrackMetaInfo:
     def __init__(self, track_file='assets/default_track.png', enwiden_file='assets/default_extralane.png', note_file='assets/default_note.png', hold_file='assets/default_hold.png', arc_file='assets/default_arc.png'):
@@ -128,7 +134,7 @@ class TrackMetaInfo:
 
     @track_file.setter
     def track_file(self, value):
-        self.__track_file = value
+        self.__track_file = _file_default(value, 'assets/default_track.png')
         self.__track_image: Image.Image = Image.open(value).transpose(Image.FLIP_TOP_BOTTOM)
 
     @property
@@ -137,7 +143,7 @@ class TrackMetaInfo:
 
     @enwiden_file.setter
     def enwiden_file(self, value):
-        self.__enwiden_file = value
+        self.__enwiden_file = _file_default(value, 'assets/default_extralane.png')
         self.__enwiden_image: Image.Image = Image.open(value).transpose(Image.FLIP_TOP_BOTTOM)
 
     @property
@@ -146,7 +152,7 @@ class TrackMetaInfo:
 
     @note_file.setter
     def note_file(self, value):
-        self.__note_file = value
+        self.__note_file = _file_default(value, 'assets/default_note.png')
         self.__note_image: Image.Image = Image.open(value).transpose(Image.FLIP_TOP_BOTTOM)
         self.__refresh_note()
 
@@ -164,7 +170,7 @@ class TrackMetaInfo:
 
     @hold_file.setter
     def hold_file(self, value):
-        self.__hold_file = value
+        self.__hold_file = _file_default(value, 'assets/default_hold.png')
         self.__hold_image: Image.Image = Image.open(value).transpose(Image.FLIP_TOP_BOTTOM)
         self.__refresh_hold()
 
@@ -180,7 +186,7 @@ class TrackMetaInfo:
 
     @arc_file.setter
     def arc_file(self, value):
-        self.__arc_file = value
+        self.__arc_file = _file_default(value, 'assets/default_arc.png')
         self.__arc_image: Image.Image = Image.open(value).transpose(Image.FLIP_TOP_BOTTOM)
         self.__refresh_arc()
 
