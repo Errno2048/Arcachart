@@ -17,7 +17,7 @@ _light = _TrackMetaInfo(
 )
 _light.bar_line_color = (127, 127, 127, 255)
 _light.track_line_color = (127, 127, 127, 255)
-_light.black_color = (159, 47, 223, 95)
+_light.black_color = (175, 95, 223, 95)
 
 _dark = _TrackMetaInfo(
     track_file='assets/track_dark.png',
