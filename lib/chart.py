@@ -1129,8 +1129,7 @@ class Chart:
 
         for enwiden_span in enwiden_spans:
             start, end = _time_to_height(enwiden_span[0], speed), _time_to_height(enwiden_span[1], speed)
-            start, end = round(start), round(end)
-            paste_extra = Image.new('RGBA', round(274 * track_meta.zoom), track_meta.extra_color)
+            paste_extra = Image.new('RGBA', _zoomed((274, end - start), track_meta.zoom), track_meta.extra_color)
             lane = track_enwiden_image.crop(_zoomed((0, start, 238, end), track_meta.zoom))
             # draw left lane
             left_border = track_base_image.crop(_zoomed((0, start, 36, end), track_meta.zoom))
