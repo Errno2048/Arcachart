@@ -551,6 +551,8 @@ class ArcGroups(_Drawable):
         return res
 
     def draw(self, image : Image.Image, draw : ImageDraw.ImageDraw, track_meta : TrackMetaInfo, speed : float):
+        sin_cap = 0.001
+
         # self.arcs has to be sorted
         diff_len = self.DRAW_DIFFERENTIAL_LENGTH
         if self.color >= 0:
@@ -594,8 +596,26 @@ class ArcGroups(_Drawable):
                     w_end = base_width * _arc_pos_to_height_ratio(arc.y_end)
                     a_left = (current_angle + next_angle + math.pi) / 2
                     a_right = (current_angle + next_angle - math.pi) / 2
-                    left_end = self.pos_from_angle(a_left, w_end // 2, base=(x_end, y_base))
-                    right_end = self.pos_from_angle(a_right, w_end // 2, base=(x_end, y_base))
+                    a_dis_left = a_left - current_angle
+                    a_dis_right = current_angle - a_right
+
+                    if a_dis_left > a_dis_right:
+                        # left is the inner
+                        sin = math.sin(a_dis_left)
+                        if sin < sin_cap:
+                            sin = sin_cap
+                        w_left = round(w_end / (2 * sin))
+                        w_right = round(w_end / 2)
+                    else:
+                        # right is the inner
+                        sin = math.sin(a_dis_right)
+                        if sin < sin_cap:
+                            sin = sin_cap
+                        w_left = round(w_end / 2)
+                        w_right = round(w_end / (2 * sin))
+
+                    left_end = self.pos_from_angle(a_left, w_left, base=(x_end, y_base))
+                    right_end = self.pos_from_angle(a_right, w_right, base=(x_end, y_base))
 
                     y_for_x = (arc.y_end - arc.y_start) / (x_end - x_start)
                     for index in range(len(x_pos) - 1):
@@ -650,11 +670,29 @@ class ArcGroups(_Drawable):
                 real_w = base_width * _arc_pos_to_height_ratio(current_y)
                 real_y = _time_to_height(current_time, speed)
                 current_angle = math.atan(real_slope)
+                # a_right <= current_angle <= a_left
                 a_left = (current_angle + next_angle + math.pi) / 2
                 a_right = (current_angle + next_angle - math.pi) / 2
+                a_dis_left = a_left - current_angle
+                a_dis_right = current_angle - a_right
 
-                left_pos_end = self.pos_from_angle(a_left, real_w // 2, base=(real_x, real_y))
-                right_pos_end = self.pos_from_angle(a_right, real_w // 2, base=(real_x, real_y))
+                if a_dis_left > a_dis_right:
+                    # left is the inner
+                    sin = math.sin(a_dis_left)
+                    if sin < sin_cap:
+                        sin = sin_cap
+                    w_left = round(real_w / (2 * sin))
+                    w_right = round(real_w / 2)
+                else:
+                    # right is the inner
+                    sin = math.sin(a_dis_right)
+                    if sin < sin_cap:
+                        sin = sin_cap
+                    w_left = round(real_w / 2)
+                    w_right = round(real_w / (2 * sin))
+
+                left_pos_end = self.pos_from_angle(a_left, w_left, base=(real_x, real_y))
+                right_pos_end = self.pos_from_angle(a_right, w_right, base=(real_x, real_y))
 
                 for current_time in time_points[_start_index:-1]:
                     real_slope = arc.x_real_slope(speed, arc.x_slope(current_time))
