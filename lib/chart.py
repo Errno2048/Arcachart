@@ -420,19 +420,22 @@ class Arc(_Drawable):
         left = round(real_x - width / 2)
         return max(0 - left, right - 1500)
 
-    def max_extra_width(self):
+    def max_extra_width(self, ignore_black=False):
         # There are some estimation errors,
         #     mainly from the connection point of arcs
-        if self.color >= 0:
-            base_width = ArcGroups.BASE_ARC_WIDTH
+        if ignore_black and self.skyline:
+            res = 0
         else:
-            base_width = ArcGroups.BASE_LINE_WIDTH
+            if self.skyline:
+                base_width = ArcGroups.BASE_LINE_WIDTH
+            else:
+                base_width = ArcGroups.BASE_ARC_WIDTH
 
-        res = max(
-            0,
-            self._extra_width_pos(self.x_start, self.y_start, base_width),
-            self._extra_width_pos(self.x_end, self.y_end, base_width),
-        )
+            res = max(
+                0,
+                self._extra_width_pos(self.x_start, self.y_start, base_width),
+                self._extra_width_pos(self.x_end, self.y_end, base_width),
+            )
 
         for tap in self.taps:
             x, y = self.position(tap)
@@ -856,10 +859,10 @@ class TimingGroup(_Drawable):
         self.timings = []
         self.total_time = 0
 
-    def max_extra_width(self):
+    def max_extra_width(self, ignore_black=False):
         res = 0
         for arc in self.arcs:
-            res = max(arc.max_extra_width(), res)
+            res = max(arc.max_extra_width(ignore_black), res)
         return res
 
     def clone(self):
@@ -1045,10 +1048,10 @@ class Chart:
             meta = {}
         self.meta = meta
 
-    def max_extra_width(self):
+    def max_extra_width(self, ignore_black=False):
         res = 0
         for timing_group in self.timing_groups:
-            res = max(timing_group.max_extra_width(), res)
+            res = max(timing_group.max_extra_width(ignore_black), res)
         return res
 
     def refine(self):
@@ -1227,7 +1230,6 @@ class Chart:
             prev_text_y = rest_y
             real_y = height_limit - rest_y + track_meta.font_size / 2
             real_x = w * page + text_x
-            print(text_index, real_y, height_limit - rest_y)
             real_pos = _zoomed((real_x, real_y), track_meta.zoom)
             draw.text(real_pos, text, fill=track_meta.font_color, font=font, anchor='lm')
 

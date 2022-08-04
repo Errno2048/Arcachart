@@ -11,7 +11,10 @@ if __name__ == '__main__':
     parser.add_argument('--preset', type=str, default='default', help='The preset of track style. The default value is "default".')
     parser.add_argument('--speed', '-s', type=float, default=2000, help='Pixel per second (before zooming). The default value is 2000.')
     parser.add_argument('--height', '-H', type=float, default=24000, help='The height of output image (before zooming). The default value is 24000.')
-    parser.add_argument('--extra-width', '-e', type=int, default=None, help='Extra border width of output image (before zooming). The default value is 0.')
+    parser.add_argument('--extra-width', '-e', type=int, default=None,
+                        help='Extra border width of output image (before zooming). '
+                             'When not specified, the extra width is automatically calculated. '
+                             'Input a value less than zero (e.g. -1) to consider black lines in the automatic calculation.')
     parser.add_argument('--arc-group-tolerance', '-t', type=int, default=20,
                         help='Tolerance of span between arcs. '
                              'Arcs with a distance less than this value will be considered as in the same group. '
@@ -86,7 +89,9 @@ if __name__ == '__main__':
 
     extra_width = args.extra_width
     if extra_width is None:
-        extra_width = chart.max_extra_width()
+        extra_width = chart.max_extra_width(ignore_black=True)
+    elif extra_width < 0:
+        extra_width = chart.max_extra_width(ignore_black=False)
     preset.extra_width = extra_width
 
     image = chart.image(preset)
