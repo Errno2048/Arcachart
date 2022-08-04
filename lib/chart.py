@@ -34,6 +34,11 @@ class TrackMetaInfo:
         self.draw_black_line = True
         self.enable_shadow = False
         self.shadow_color = (0, 0, 0, 63)
+        self.blue_color = (63, 223, 255, 127)
+        self.red_color = (255, 63, 191, 127)
+        self.green_color = (63, 255, 63, 127)
+        self.yellow_color = (223, 223, 63, 127)
+        self.black_color = (159, 47, 223, 95)
 
     def clone(self):
         res = self.__class__()
@@ -51,6 +56,11 @@ class TrackMetaInfo:
         res.speed = self.speed
         res.group_tolerance = self.group_tolerance
         res.draw_black_line = self.draw_black_line
+        res.blue_color = self.blue_color
+        res.red_color = self.red_color
+        res.green_color = self.green_color
+        res.yellow_color = self.yellow_color
+        res.black_color = self.black_color
         return res
 
     @property
@@ -718,19 +728,19 @@ class ArcGroups(_Drawable):
 
         if self.color == 0:
             # Blue
-            fill_color = (63, 223, 255, 127)
+            fill_color = track_meta.blue_color
         elif self.color == 1:
             # Red
-            fill_color = (255, 63, 191, 127)
+            fill_color = track_meta.red_color
         elif self.color == 2:
             # Green
-            fill_color = (63, 255, 63, 127)
+            fill_color = track_meta.green_color
         elif self.color >= 3:
             # Yellow
-            fill_color = (223, 223, 63, 127)
+            fill_color = track_meta.yellow_color
         else:
             # line
-            fill_color = (127, 15, 191, 63)
+            fill_color = track_meta.black_color
         real_pos = []
         for x, y in pos:
             real_pos.append((round(x * track_meta.zoom), round(y * track_meta.zoom)))
