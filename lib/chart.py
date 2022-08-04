@@ -705,10 +705,8 @@ class ArcGroups(_Drawable):
 
                     y_for_x = (arc.y_end - arc.y_start) / (x_end - x_start)
                     for index in range(len(x_pos) - 1):
-                        dx_start, dx_end = x_pos[index], x_pos[index + 1]
-                        #dy_start = y_for_x * (dx_start - x_start)
-                        dy_end = y_for_x * (dx_end - x_start)
-                        #w_start = base_width * _arc_pos_to_height_ratio(dy_start)
+                        dx_end = x_pos[index + 1]
+                        dy_end = arc.y_start + y_for_x * (dx_end - x_start)
                         w_end = base_width * _arc_pos_to_height_ratio(dy_end)
 
                         if sign_factor > 0:
@@ -724,8 +722,6 @@ class ArcGroups(_Drawable):
                             if dx_end > left_end[0]:
                                 left_pos.append((dx_end, y_base - sign_factor * w_end // 2))
 
-                        left_pos.append((dx_end, y_base - sign_factor * w_end // 2))
-                        right_pos.append((dx_end, y_base + sign_factor * w_end // 2))
                     left_pos.append(left_end)
                     right_pos.append(right_end)
                     prev_left, prev_right = left_end, right_end
@@ -798,6 +794,8 @@ class ArcGroups(_Drawable):
                 left_pos.append(left_pos_end)
                 right_pos.append(right_pos_end)
                 prev_left, prev_right = left_pos_end, right_pos_end
+        print(left_pos)
+        print(right_pos)
         pos = []
         pos.extend(left_pos)
         pos.extend(reversed(right_pos))
