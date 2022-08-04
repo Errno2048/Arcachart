@@ -13,7 +13,7 @@ _light = _TrackMetaInfo(
     enwiden_file='assets/img/track_extralane_light.png',
     note_file='assets/img/note.png',
     hold_file='assets/img/note_hold.png',
-    arc_file='assets/img/arc_body.png',
+    arc_file='assets/models/tap_l.png',
 )
 _light.bar_line_color = (127, 127, 127, 255)
 _light.track_line_color = (127, 127, 127, 255)
@@ -26,7 +26,7 @@ _dark = _TrackMetaInfo(
     enwiden_file='assets/img/track_extralane_dark.png',
     note_file='assets/img/note_dark.png',
     hold_file='assets/img/note_hold_dark.png',
-    arc_file='assets/img/arc_body.png',
+    arc_file='assets/models/tap_d.png',
 )
 _dark.bar_line_color = (191, 191, 191, 255)
 _dark.track_line_color = (191, 191, 191, 255)
@@ -37,10 +37,12 @@ _dark.extra_color = (0, 0, 0, 0)
 _light_tomato = _light.clone()
 _light_tomato.note_file = 'assets/img/note_tomato.png'
 _light_tomato.hold_file = 'assets/img/note_hold_tomato.png'
+_light_tomato.arc_file = 'assets/models/tap_tomato.png'
 
 _dark_tomato = _dark.clone()
 _dark_tomato.note_file = 'assets/img/note_tomato.png'
 _dark_tomato.hold_file = 'assets/img/note_hold_tomato.png'
+_dark_tomato.arc_file = 'assets/models/tap_tomato.png'
 
 _arcana = _dark.clone()
 _arcana.track_file = 'assets/img/track_arcana.png'
