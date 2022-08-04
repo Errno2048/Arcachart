@@ -794,8 +794,6 @@ class ArcGroups(_Drawable):
                 left_pos.append(left_pos_end)
                 right_pos.append(right_pos_end)
                 prev_left, prev_right = left_pos_end, right_pos_end
-        print(left_pos)
-        print(right_pos)
         pos = []
         pos.extend(left_pos)
         pos.extend(reversed(right_pos))
