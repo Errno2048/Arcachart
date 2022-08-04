@@ -1122,9 +1122,9 @@ class Chart:
         track_enwiden_image = track_meta.enwiden_to_image(height=total_height)
 
         bg_image = Image.new('RGBA', _zoomed((1500 + track_meta.extra_width * 2, total_height), track_meta.zoom), track_meta.extra_color)
-        bg_image.paste(track_base_image, _zoomed((238 + track_meta.extra_width, 0), track_meta.zoom), track_base_image)
-        bg_image.paste(track_enwiden_image, _zoomed((0 + track_meta.extra_width, 0), track_meta.zoom), track_enwiden_image)
-        bg_image.paste(track_enwiden_image, _zoomed((1262 + track_meta.extra_width, 0), track_meta.zoom), track_enwiden_image)
+        bg_image.alpha_composite(track_base_image, _zoomed((238 + track_meta.extra_width, 0), track_meta.zoom))
+        bg_image.alpha_composite(track_enwiden_image, _zoomed((0 + track_meta.extra_width, 0), track_meta.zoom))
+        bg_image.alpha_composite(track_enwiden_image, _zoomed((1262 + track_meta.extra_width, 0), track_meta.zoom))
 
         bg_draw = ImageDraw.Draw(bg_image)
         bg_draw.line((_zoomed((512 + track_meta.extra_width, 0), track_meta.zoom), _zoomed((512 + track_meta.extra_width, total_height), track_meta.zoom)), track_meta.track_line_color, round(track_meta.track_line_width * track_meta.zoom))
@@ -1134,15 +1134,18 @@ class Chart:
         for enwiden_span in enwiden_spans:
             start, end = _time_to_height(enwiden_span[0], speed), _time_to_height(enwiden_span[1], speed)
             start, end = round(start), round(end)
+            paste_extra = Image.new('RGBA', round(274 * track_meta.zoom), track_meta.extra_color)
             lane = track_enwiden_image.crop(_zoomed((0, start, 238, end), track_meta.zoom))
             # draw left lane
             left_border = track_base_image.crop(_zoomed((0, start, 36, end), track_meta.zoom))
-            bg_image.paste(left_border, _zoomed((0 + track_meta.extra_width, start), track_meta.zoom), left_border)
-            bg_image.paste(lane, _zoomed((36 + track_meta.extra_width, start), track_meta.zoom), lane)
+            bg_image.paste(paste_extra, _zoomed((0 + track_meta.extra_width, start), track_meta.zoom))
+            bg_image.alpha_composite(left_border, _zoomed((0 + track_meta.extra_width, start), track_meta.zoom))
+            bg_image.alpha_composite(lane, _zoomed((36 + track_meta.extra_width, start), track_meta.zoom))
             # draw right lane
             right_border = track_base_image.crop(_zoomed((988, start, 1024, end), track_meta.zoom))
-            bg_image.paste(right_border, _zoomed((1464 + track_meta.extra_width, start), track_meta.zoom), right_border)
-            bg_image.paste(lane, _zoomed((1226 + track_meta.extra_width, start), track_meta.zoom), lane)
+            bg_image.paste(paste_extra, _zoomed((1226 + track_meta.extra_width, start), track_meta.zoom))
+            bg_image.alpha_composite(right_border, _zoomed((1464 + track_meta.extra_width, start), track_meta.zoom))
+            bg_image.alpha_composite(lane, _zoomed((1226 + track_meta.extra_width, start), track_meta.zoom))
             bg_draw.line((_zoomed((274 + track_meta.extra_width, start), track_meta.zoom), _zoomed((274 + track_meta.extra_width, end), track_meta.zoom)), track_meta.track_line_color, round(track_meta.track_line_width * track_meta.zoom))
             bg_draw.line((_zoomed((1226 + track_meta.extra_width, start), track_meta.zoom), _zoomed((1226 + track_meta.extra_width, end), track_meta.zoom)), track_meta.track_line_color, round(track_meta.track_line_width * track_meta.zoom))
 
