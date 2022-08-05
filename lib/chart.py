@@ -148,7 +148,7 @@ class TrackMetaInfo:
     @track_file.setter
     def track_file(self, value):
         self.__track_file = _file_default(value, _DEFAULT_TRACK_DARK if self.side == 1 else _DEFAULT_TRACK_LIGHT)
-        self.__track_image: Image.Image = Image.open(value).convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
+        self.__track_image: Image.Image = Image.open(self.__track_file).convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
 
     @property
     def enwiden_file(self):
@@ -157,7 +157,7 @@ class TrackMetaInfo:
     @enwiden_file.setter
     def enwiden_file(self, value):
         self.__enwiden_file = _file_default(value, _DEFAULT_ENWIDEN_DARK if self.side == 1 else _DEFAULT_ENWIDEN_LIGHT)
-        self.__enwiden_image: Image.Image = Image.open(value).convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
+        self.__enwiden_image: Image.Image = Image.open(self.__enwiden_file).convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
 
     @property
     def note_file(self):
@@ -166,7 +166,7 @@ class TrackMetaInfo:
     @note_file.setter
     def note_file(self, value):
         self.__note_file = _file_default(value, _DEFAULT_NOTE_DARK if self.side == 1 else _DEFAULT_NOTE_LIGHT)
-        self.__note_image: Image.Image = Image.open(value).convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
+        self.__note_image: Image.Image = Image.open(self.__note_file).convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
         self.__refresh_note()
 
     def __refresh_note(self):
@@ -184,7 +184,7 @@ class TrackMetaInfo:
     @hold_file.setter
     def hold_file(self, value):
         self.__hold_file = _file_default(value, _DEFAULT_HOLD_DARK if self.side == 1 else _DEFAULT_HOLD_LIGHT)
-        self.__hold_image: Image.Image = Image.open(value).convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
+        self.__hold_image: Image.Image = Image.open(self.__hold_file).convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
         self.__refresh_hold()
 
     def __refresh_hold(self):
@@ -200,7 +200,7 @@ class TrackMetaInfo:
     @arc_file.setter
     def arc_file(self, value):
         self.__arc_file = _file_default(value, _DEFAULT_ARC_DARK if self.side == 1 else _DEFAULT_ARC_LIGHT)
-        self.__arc_image: Image.Image = Image.open(value).convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
+        self.__arc_image: Image.Image = Image.open(self.__arc_file).convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
         self.__refresh_arc()
 
     def __refresh_arc(self):
