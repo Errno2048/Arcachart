@@ -1,4 +1,6 @@
 from .chart import TrackMetaInfo as _TrackMetaInfo
+import os as _os
+import json as _json
 
 _default = _TrackMetaInfo(
     track_file='assets/img/default_track.png',
@@ -99,3 +101,88 @@ def get(name):
     if track_meta_template:
         return track_meta_template.clone()
     return None
+
+_bg_light = ['aegleseeker', 'arcahv', 'auxesia', 'chuni-worldvanquisher', 'felis', 'fractureray', 'gou', 'modelista', 'nirvluce', 'omegafour', 'pragmatism', 'pragmatism3', 'quon', 'ringedgenesis', 'shiawase', 'shiawase2', 'solitarydream', 'tanoc_red', ]
+_bg_conflict = ['aterlbus', 'axiumcrisis', 'chuni-garakuta', 'chuni-ikazuchi', 'cyaegha', 'grievouslady', 'maimai-boss', 'saikyostronger', 'sheriruth', 'tiferet', 'wacca_boss', ]
+
+_bg_no_inverse = {
+    'alexandrite': 'black',
+    'arcanaeden': 'arcana',
+    'epilogue': 'colorless',
+    'etherstrike': 'rei',
+    'lethaeus': 'black',
+    'mirai_awakened': 'black',
+    'pentiment': 'pentiment',
+    'saikyostronger': 'black',
+    'tempestissimo': 'tempestissimo',
+    'testify': 'colorless',
+}
+for _item in _bg_light:
+    _bg_no_inverse[_item] = 'light'
+for _item in _bg_conflict:
+    _bg_no_inverse[_item] = 'dark'
+
+_bg_to_preset = {
+    'finale_conflict': 'finale',
+    'mirai_conflict': 'black',
+    'nijuusei-conflict-b': 'dark_nijuusei',
+    'nijuusei2_conflict': 'dark_nijuusei',
+    'vs_conflict': 'dark_nijuusei',
+}
+
+_inverse_bg_to_preset = {
+    'finale_light': 'finale',
+    'mirai_light': 'black',
+    'nijuusei-light-b': 'dark_nijuusei',
+    'nijuusei2_light': 'dark_nijuusei',
+    'vs_light': 'dark_nijuusei',
+}
+
+_songlist_file = 'assets/songs/songlist'
+_songdict = {}
+_songdict_inverse = {}
+if _os.path.isfile(_songlist_file):
+    _extra_ids = [
+        {"id": "ignotusafterburn", "side": 1, "bg": "base_conflict"},
+        {"id": "redandblueandgreen", "side": 1, "bg": "base_conflict"},
+        {"id": "singularityvvvip", "side": 1, "bg": "nijuusei-conflict-b"},
+        {"id": "overdead", "side": 1, "bg": "nijuusei-conflict-b"},
+        {"id": "mismal", "side": 1, "bg": "vs_conflict"},
+    ]
+    with open(_songlist_file, 'r', encoding='utf8') as _f:
+        _songlist = _json.load(_f)['songs']
+    for _dic in _songlist + _extra_ids:
+        _id = _dic['id']
+        _side = _dic['side']
+        _bg = _dic['bg']
+        _no_inverse = _bg_no_inverse.get(_bg, None)
+        if _no_inverse:
+            _songdict[_id] = _no_inverse
+            _songdict_inverse[_id] = _no_inverse
+        else:
+            _original = _bg_to_preset.get(_bg, None)
+            if _original:
+                _songdict[_id] = _original
+            else:
+                if _side == 1:
+                    _songdict[_id] = 'dark'
+                else:
+                    _songdict[_id] = 'light'
+            _inverse = _inverse_bg_to_preset.get(_bg, None)
+            if _inverse:
+                _songdict_inverse[_id] = _inverse
+            else:
+                if _side == 1:
+                    _songdict_inverse[_id] = 'light'
+                else:
+                    _songdict_inverse[_id] = 'dark'
+
+def from_id(id):
+    preset = _songdict.get(id, 'default')
+    return get(preset)
+
+def from_id_inverse(id):
+    preset = _songdict_inverse.get(id, 'default')
+    return get(preset)
+
+__all__ = list(filter(lambda x: x[0] != '_', globals()))

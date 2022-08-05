@@ -8,7 +8,7 @@ if __name__ == '__main__':
 
     parser.add_argument('id', type=str, help='Official file ID. If official file with this ID is not found, Arcachart will consider the value as a path instead.')
     parser.add_argument('difficulty', type=int, default=None, nargs='?', help='Difficulty from 0 to 3. The default is the highest difficulty.')
-    parser.add_argument('--preset', type=str, default='default', help='The preset of track style. The default value is "default".')
+    parser.add_argument('--preset', '-p', type=str, default=None, help='The preset of track style. The default value depends on song ID. Input "inverse" to get inversed preset depends on ID.')
     parser.add_argument('--speed', '-s', type=float, default=2000, help='Pixel per second (before zooming). The default value is 2000.')
     parser.add_argument('--height', '-H', type=float, default=24000, help='The height of output image (before zooming). The default value is 24000.')
     parser.add_argument('--extra-width', '-e', type=int, default=None,
@@ -26,16 +26,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    preset = presets.get(args.preset)
-    if preset is None:
-        preset = presets.get('default')
-
-    preset.speed = args.speed
-    preset.group_tolerance = args.arc_group_tolerance
-    preset.zoom = args.zoom
-    preset.draw_black_line = not args.ignore_black_line
-    preset.height_limit = args.height
-
     read_noinput = args.read_noinput
 
     format_ = args.format
@@ -49,6 +39,8 @@ if __name__ == '__main__':
 
     file = None
     final_diff = None
+    preset_name = args.preset
+    preset = None
 
     if not os.path.isabs(file_id):
         songs_dir = f'assets/songs/{file_id}'
@@ -66,6 +58,11 @@ if __name__ == '__main__':
                     file = _file
                     final_diff = diff
                     break
+        if file is not None:
+            if preset_name is None:
+                preset = presets.from_id(file_id)
+            elif preset_name == 'inverse':
+                preset = presets.from_id_inverse(file_id)
     if file is None:
         for diff in diffs:
             _file = f'{file_id}_{diff}'
@@ -82,6 +79,19 @@ if __name__ == '__main__':
         output_file = f'{file_id}_{final_diff}.{format_}'
     else:
         output_file = f'{file_id}.{format_}'
+
+    if preset is None:
+        preset = presets.get(preset_name)
+    if preset is None:
+        preset = presets.get('default')
+
+    preset.speed = args.speed
+    preset.group_tolerance = args.arc_group_tolerance
+    preset.zoom = args.zoom
+    preset.draw_black_line = not args.ignore_black_line
+    preset.height_limit = args.height
+
+    print(preset.track_file)
 
     with open(file, 'r') as f:
         chart_data = f.read()
