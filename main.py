@@ -91,8 +91,6 @@ if __name__ == '__main__':
     preset.draw_black_line = not args.ignore_black_line
     preset.height_limit = args.height
 
-    print(preset.track_file)
-
     with open(file, 'r') as f:
         chart_data = f.read()
     chart = read(chart_data, read_noinput=read_noinput)
