@@ -1053,6 +1053,24 @@ def _ms_to_time(time : int):
         text = "%02d:%02d:%02d.%03d" % (h, m, s, ms)
     return text
 
+def _float_s(value : float, decimal : int = 0):
+    if decimal < 0:
+        decimal = 0
+    negative = value < 0
+    if negative:
+        value = -value
+    value = round(value, decimal)
+    real_dec = 0
+    _value = value
+    tolerance = 0.1 ** (decimal + 1)
+    while real_dec < decimal:
+        if (_value - math.floor(_value)) < tolerance:
+            break
+        real_dec += 1
+        _value *= 10
+        tolerance *= 10
+    return (f'{"-" if negative else ""}%.0{real_dec}f') % value
+
 class Chart:
     def __init__(self, meta=None):
         self.enwidenlaneses = []
@@ -1170,7 +1188,7 @@ class Chart:
                 continue
             if index == 0:
                 start = start + bar_span
-            bars.extend(np.arange(start, end, bar_span))
+            bars.extend(map(lambda x: (x, timing.bpm, timing.beats), np.arange(start, end, bar_span)))
 
         bar_index = 0
         bar_total = len(bars)
@@ -1178,7 +1196,7 @@ class Chart:
         for index in range(len(enwiden_times) - 1):
             start_time, end_time, is_enwiden = enwiden_times[index], enwiden_times[index + 1], index & 1
             while bar_index < bar_total:
-                bar_time = bars[bar_index]
+                bar_time, bpm, beats = bars[bar_index]
                 #if start_time < bar_time and bar_time < end_time \
                 #    or (bar_time == start_time or bar_time == end_time) and not is_enwiden:
                 if bar_time < end_time or bar_time == end_time and not is_enwiden:
@@ -1195,7 +1213,8 @@ class Chart:
                         text_x = x_start + track_meta.extra_width + track_meta.font_size / 2
                     text_y = y
                     text = _ms_to_time(bar_time)
-                    text = f'{text} {bar_index}'
+                    #text = f'{text} {bar_index} {bpm:.02f} {beats:.01f}'
+                    text = f'{text} {_float_s(bpm, 3)} {_float_s(beats, 3)}'
                     text_info.append((bar_index, text, text_x, text_y))
 
                     bar_index += 1
