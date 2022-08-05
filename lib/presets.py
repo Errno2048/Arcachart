@@ -3,11 +3,11 @@ import os as _os
 import json as _json
 
 _default = _TrackMetaInfo(
-    track_file='assets/img/default_track.png',
-    enwiden_file='assets/img/default_extralane.png',
-    note_file='assets/img/default_note.png',
-    hold_file='assets/img/default_hold.png',
-    arc_file='assets/img/default_arc.png',
+    track_file='default/default_track.png',
+    enwiden_file='default/default_extralane.png',
+    note_file='default/default_note.png',
+    hold_file='default/default_hold.png',
+    arc_file='default/default_arc.png',
 )
 
 _light = _TrackMetaInfo(
