@@ -21,8 +21,20 @@ def _file_default(value, default):
         return value
     return default
 
+_DEFAULT_TRACK_LIGHT = 'default/default_track.png'
+_DEFAULT_ENWIDEN_LIGHT = 'default/default_extralane.png'
+_DEFAULT_NOTE_LIGHT = 'default/default_note.png'
+_DEFAULT_HOLD_LIGHT = 'default/default_hold.png'
+_DEFAULT_ARC_LIGHT = 'default/default_arc.png'
+_DEFAULT_TRACK_DARK = 'default/default_track_dark.png'
+_DEFAULT_ENWIDEN_DARK = 'default/default_extralane_dark.png'
+_DEFAULT_NOTE_DARK = 'default/default_note_dark.png'
+_DEFAULT_HOLD_DARK = 'default/default_hold_dark.png'
+_DEFAULT_ARC_DARK = 'default/default_arc_dark.png'
+
 class TrackMetaInfo:
-    def __init__(self, track_file='default/default_track.png', enwiden_file='default/default_extralane.png', note_file='default/default_note.png', hold_file='default/default_hold.png', arc_file='default/default_arc.png'):
+    def __init__(self, track_file=_DEFAULT_TRACK_LIGHT, enwiden_file=_DEFAULT_ENWIDEN_LIGHT, note_file=_DEFAULT_NOTE_LIGHT, hold_file=_DEFAULT_HOLD_LIGHT, arc_file=_DEFAULT_ARC_LIGHT, side=0):
+        self.side = side
         self.track_file = track_file
         self.enwiden_file = enwiden_file
         self.bar_line_width = 2
@@ -52,6 +64,7 @@ class TrackMetaInfo:
 
     def clone(self):
         res = self.__class__()
+        res.side = self.side
         res.track_file = self.track_file
         res.enwiden_file = self.enwiden_file
         res.note_file = self.note_file
@@ -134,7 +147,7 @@ class TrackMetaInfo:
 
     @track_file.setter
     def track_file(self, value):
-        self.__track_file = _file_default(value, 'default/default_track.png')
+        self.__track_file = _file_default(value, _DEFAULT_TRACK_DARK if self.side == 1 else _DEFAULT_TRACK_LIGHT)
         self.__track_image: Image.Image = Image.open(value).convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
 
     @property
@@ -143,7 +156,7 @@ class TrackMetaInfo:
 
     @enwiden_file.setter
     def enwiden_file(self, value):
-        self.__enwiden_file = _file_default(value, 'default/default_extralane.png')
+        self.__enwiden_file = _file_default(value, _DEFAULT_ENWIDEN_DARK if self.side == 1 else _DEFAULT_ENWIDEN_LIGHT)
         self.__enwiden_image: Image.Image = Image.open(value).convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
 
     @property
@@ -152,7 +165,7 @@ class TrackMetaInfo:
 
     @note_file.setter
     def note_file(self, value):
-        self.__note_file = _file_default(value, 'default/default_note.png')
+        self.__note_file = _file_default(value, _DEFAULT_NOTE_DARK if self.side == 1 else _DEFAULT_NOTE_LIGHT)
         self.__note_image: Image.Image = Image.open(value).convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
         self.__refresh_note()
 
@@ -170,7 +183,7 @@ class TrackMetaInfo:
 
     @hold_file.setter
     def hold_file(self, value):
-        self.__hold_file = _file_default(value, 'default/default_hold.png')
+        self.__hold_file = _file_default(value, _DEFAULT_HOLD_DARK if self.side == 1 else _DEFAULT_HOLD_LIGHT)
         self.__hold_image: Image.Image = Image.open(value).convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
         self.__refresh_hold()
 
@@ -186,7 +199,7 @@ class TrackMetaInfo:
 
     @arc_file.setter
     def arc_file(self, value):
-        self.__arc_file = _file_default(value, 'default/default_arc.png')
+        self.__arc_file = _file_default(value, _DEFAULT_ARC_DARK if self.side == 1 else _DEFAULT_ARC_LIGHT)
         self.__arc_image: Image.Image = Image.open(value).convert('RGBA').transpose(Image.FLIP_TOP_BOTTOM)
         self.__refresh_arc()
 

@@ -8,7 +8,22 @@ _default = _TrackMetaInfo(
     note_file='default/default_note.png',
     hold_file='default/default_hold.png',
     arc_file='default/default_arc.png',
+    side=0,
 )
+
+_default_dark = _TrackMetaInfo(
+    track_file='default/default_track_dark.png',
+    enwiden_file='default/default_extralane_dark.png',
+    note_file='default/default_note_dark.png',
+    hold_file='default/default_hold_dark.png',
+    arc_file='default/default_arc_dark.png',
+    side=1,
+)
+_default_dark.bar_line_color = (191, 191, 191, 255)
+_default_dark.track_line_color = (191, 191, 191, 255)
+_default_dark.black_color = (223, 127, 255, 95)
+_default_dark.font_color = (255, 255, 255, 191)
+_default_dark.extra_color = (102, 101, 114, 255)
 
 _light = _TrackMetaInfo(
     track_file='assets/img/track.png',
@@ -16,6 +31,7 @@ _light = _TrackMetaInfo(
     note_file='assets/img/note.png',
     hold_file='assets/img/note_hold.png',
     arc_file='assets/models/tap_l.png',
+    side=0,
 )
 _light.bar_line_color = (127, 127, 127, 255)
 _light.track_line_color = (127, 127, 127, 255)
@@ -29,6 +45,7 @@ _dark = _TrackMetaInfo(
     note_file='assets/img/note_dark.png',
     hold_file='assets/img/note_hold_dark.png',
     arc_file='assets/models/tap_d.png',
+    side=1,
 )
 _dark.bar_line_color = (191, 191, 191, 255)
 _dark.track_line_color = (191, 191, 191, 255)
@@ -75,6 +92,7 @@ _tempestissimo.track_file = 'assets/img/track_tempestissimo.png'
 
 _presets = {
     'default': _default,
+    'default_dark': _default_dark,
     'light': _light,
     'dark': _dark,
     'light_tomato': _light_tomato,
@@ -96,10 +114,14 @@ def register(name, track_meta : _TrackMetaInfo, overwrite=False):
     else:
         _presets.setdefault(name, track_meta)
 
-def get(name):
+def get(name, default=None):
     track_meta_template = _presets.get(name, None)
     if track_meta_template:
         return track_meta_template.clone()
+    if default is not None:
+        track_meta_template = _presets.get(default, None)
+        if track_meta_template:
+            return track_meta_template.clone()
     return None
 
 _bg_light = ['aegleseeker', 'arcahv', 'auxesia', 'chuni-worldvanquisher', 'felis', 'fractureray', 'gou', 'modelista', 'nirvluce', 'omegafour', 'pragmatism', 'pragmatism3', 'quon', 'ringedgenesis', 'shiawase', 'shiawase2', 'solitarydream', 'tanoc_red', ]
@@ -141,6 +163,7 @@ _inverse_bg_to_preset = {
 _songlist_file = 'assets/songs/songlist'
 _songdict = {}
 _songdict_inverse = {}
+_sides = {}
 if _os.path.isfile(_songlist_file):
     _extra_ids = [
         {"id": "ignotusafterburn", "side": 1, "bg": "base_conflict"},
@@ -156,6 +179,7 @@ if _os.path.isfile(_songlist_file):
         _side = _dic['side']
         _bg = _dic['bg']
         _no_inverse = _bg_no_inverse.get(_bg, None)
+        _sides[_id] = _side
         if _no_inverse:
             _songdict[_id] = _no_inverse
             _songdict_inverse[_id] = _no_inverse
@@ -179,10 +203,14 @@ if _os.path.isfile(_songlist_file):
 
 def from_id(id):
     preset = _songdict.get(id, 'default')
-    return get(preset)
+    side = _sides.get(id, 0)
+    default = 'default_dark' if side == 1 else 'default'
+    return get(preset, default=default)
 
 def from_id_inverse(id):
     preset = _songdict_inverse.get(id, 'default')
-    return get(preset)
+    side = _sides.get(id, 0)
+    default = 'default' if side == 1 else 'default_dark'
+    return get(preset, default=default)
 
 __all__ = list(filter(lambda x: x[0] != '_', globals()))
