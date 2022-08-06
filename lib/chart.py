@@ -1094,16 +1094,6 @@ class Chart:
             timing_group.refine()
             self.total_time = max(self.total_time, timing_group.total_time)
         self.total_draw_time = self.total_time
-        if self.timing_groups:
-            bar_span = None
-            index = -1
-            while bar_span is None:
-                last_timing : Timing = self.timing_groups[0].timings[index]
-                last_time = last_timing.time
-                bar_span = last_timing.bar_span
-                index -= 1
-            assert bar_span is not None, 'BPM is zero'
-            self.total_draw_time = last_time + math.ceil((self.total_draw_time - last_time) / bar_span) * bar_span
 
     def background(self, speed, track_meta : TrackMetaInfo):
         """
