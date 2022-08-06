@@ -391,7 +391,7 @@ class GroundNote(_Drawable):
 
     def draw(self, image : Image.Image, draw : ImageDraw.ImageDraw, track_meta : TrackMetaInfo, speed : float):
         note_image = track_meta.note_to_image()
-        dest_x = 36 + track_meta.track_line_width // 2 + 238 * self.lane
+        dest_x = 36 + track_meta.track_line_width / 2 + 238 * self.lane
         # TODO: is - note_image.size[1] / 2 correct?
         dest_x = round(dest_x * track_meta.zoom + track_meta.extra_width * track_meta.zoom)
         dest_y = round(_time_to_height(self.start, speed) * track_meta.zoom)# - note_image.size[1] / 2
@@ -409,7 +409,7 @@ class Hold(_Drawable):
 
     def draw(self, image : Image.Image, draw : ImageDraw.ImageDraw, track_meta : TrackMetaInfo, speed : float):
         hold_image = track_meta.hold_to_image(round(_time_to_height(self.end - self.start, speed)))
-        dest_x = 36 + track_meta.track_line_width // 2 + 238 * self.lane
+        dest_x = 36 + track_meta.track_line_width / 2 + 238 * self.lane
         dest_x = round(dest_x * track_meta.zoom + track_meta.extra_width * track_meta.zoom)
         dest_y = round(_time_to_height(self.start, speed) * track_meta.zoom)
         image.alpha_composite(hold_image, dest=(dest_x, dest_y))
@@ -686,8 +686,8 @@ class ArcGroups(_Drawable):
                     # left_pos and right_pos is empty
                     # TODO: to check if the sign_factor is correct or inversed
                     w_initial = base_width * _arc_pos_to_height_ratio(arc.y_start)
-                    left_pos.append((x_start, y_base - sign_factor * w_initial // 2))
-                    right_pos.append((x_start, y_base + sign_factor * w_initial // 2))
+                    left_pos.append((x_start, y_base - sign_factor * w_initial / 2))
+                    right_pos.append((x_start, y_base + sign_factor * w_initial / 2))
                 if x_pos is not None:
                     # The last position pair
                     # left: (angle1 + angle2 + pi) / 2
@@ -725,15 +725,15 @@ class ArcGroups(_Drawable):
                         if sign_factor > 0:
                             # x_start < x_end, discard right pos at the end, discard left pos at the beginning
                             if prev_left is None or dx_end > prev_left[0]:
-                                left_pos.append((dx_end, y_base - sign_factor * w_end // 2))
+                                left_pos.append((dx_end, y_base - sign_factor * w_end / 2))
                             if dx_end < right_end[0]:
-                                right_pos.append((dx_end, y_base + sign_factor * w_end // 2))
+                                right_pos.append((dx_end, y_base + sign_factor * w_end / 2))
                         else:
                             # x_start > x_end, discard left pos at the end, discard right pos at the beginning
                             if prev_right is None or dx_end < prev_right[0]:
-                                right_pos.append((dx_end, y_base + sign_factor * w_end // 2))
+                                right_pos.append((dx_end, y_base + sign_factor * w_end / 2))
                             if dx_end > left_end[0]:
-                                left_pos.append((dx_end, y_base - sign_factor * w_end // 2))
+                                left_pos.append((dx_end, y_base - sign_factor * w_end / 2))
 
                     left_pos.append(left_end)
                     right_pos.append(right_end)
@@ -744,8 +744,8 @@ class ArcGroups(_Drawable):
                     w_end = base_width * _arc_pos_to_height_ratio(arc.y_end)
                     a_left = (current_angle + next_angle + math.pi) / 2
                     a_right = (current_angle + next_angle - math.pi) / 2
-                    left_end = self.pos_from_angle(a_left, w_end // 2, base=(x_end, y_base))
-                    right_end = self.pos_from_angle(a_right, w_end // 2, base=(x_end, y_base))
+                    left_end = self.pos_from_angle(a_left, w_end / 2, base=(x_end, y_base))
+                    right_end = self.pos_from_angle(a_right, w_end / 2, base=(x_end, y_base))
                     left_pos.append(left_end)
                     right_pos.append(right_end)
                     prev_left, prev_right = left_end, right_end
@@ -797,8 +797,8 @@ class ArcGroups(_Drawable):
                     real_y = _time_to_height(current_time, speed)
                     current_angle = math.atan(real_slope)
 
-                    _left_pos = self.pos_from_angle(current_angle + math.pi / 2, real_w // 2, base=(real_x, real_y))
-                    _right_pos = self.pos_from_angle(current_angle - math.pi / 2, real_w // 2, base=(real_x, real_y))
+                    _left_pos = self.pos_from_angle(current_angle + math.pi / 2, real_w / 2, base=(real_x, real_y))
+                    _right_pos = self.pos_from_angle(current_angle - math.pi / 2, real_w / 2, base=(real_x, real_y))
                     # ordinary arcs can simply compare time
                     if (prev_left is None or prev_left[1] < _left_pos[1]) and  _left_pos[1] < left_pos_end[1]:
                         left_pos.append(_left_pos)
