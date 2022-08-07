@@ -51,7 +51,7 @@ _dark.bar_line_color = (191, 191, 191, 255)
 _dark.track_line_color = (191, 191, 191, 255)
 _dark.black_color = (223, 127, 255, 95)
 _dark.font_color = (255, 255, 255, 191)
-_default_dark.extra_color = (102, 101, 114, 255)
+_dark.extra_color = (102, 101, 114, 255)
 
 _light_tomato = _light.clone()
 _light_tomato.note_file = 'assets/img/note_tomato.png'
