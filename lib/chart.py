@@ -540,6 +540,7 @@ def group_arcs(arcs, tolerance=0):
         else:
             color = arc.color
         start_dict, end_dict = color_dict.setdefault(color, ({}, {}))
+
         if tolerance > 0:
             time_start = round(arc.start / tolerance) * tolerance
             time_end = round(arc.end / tolerance) * tolerance
@@ -574,10 +575,21 @@ def group_arcs(arcs, tolerance=0):
         new_end.append(arcs)
     arc_groups = []
     for color, (start_dict, end_dict) in color_dict.items():
-        for start_point, arc_lists in start_dict.items():
+        for _, arc_lists in start_dict.items():
             for arc_list in arc_lists:
-                new_group = ArcGroups(arc_list, color)
-                arc_groups.append(new_group)
+                new_list = []
+                new_lists = [new_list]
+                prev_zero_time = False
+                for arc in arc_list:
+                    zero_time = arc.end <= arc.start
+                    if zero_time and prev_zero_time:
+                        new_list = []
+                        new_lists.append(new_list)
+                    new_list.append(arc)
+                    prev_zero_time = zero_time
+                for new_list in new_lists:
+                    new_group = ArcGroups(new_list, color)
+                    arc_groups.append(new_group)
     return arc_groups
 
 class ArcGroups(_Drawable):
