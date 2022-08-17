@@ -954,7 +954,7 @@ class TimingGroup(_Drawable):
         arc_note_label = [False for i in range(len(arc_notes))]
 
         for arc in self.arcs:
-            if arc.color < 0:
+            if arc.skyline:
                 # Black lines are not taken into consideration
                 continue
             start, end = arc.start, arc.end
@@ -964,7 +964,13 @@ class TimingGroup(_Drawable):
                 continue
             for index in range(left_index, right_index + 1):
                 y, time, x = arc_notes[index]
-                x_arc, y_arc = arc.position(time)
+                if arc.end <= arc.start:
+                    if arc.x_end != arc.x_start:
+                        y_arc = arc.y_start + (arc.y_end - arc.y_start) * (x - arc.x_start) / (arc.x_end - arc.x_start)
+                    else:
+                        continue
+                else:
+                    x_arc, y_arc = arc.position(time)
                 if y_arc > y:
                     arc_note_label[index] = True
 
